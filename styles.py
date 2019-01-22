@@ -152,7 +152,11 @@ def parse_args():
         default='./data/styles/*.jpg',
         help='Location of training styles',
     )
-
+    parser.add_argument(
+        '--vgg16',
+        default=None,
+        help='Vgg16 model',
+    )
     group = parser.add_mutually_exclusive_group(required=True)
     group.set_defaults(worker=False)
     group.set_defaults(evaluator=False)
@@ -271,6 +275,7 @@ def main():
         'center_crop':args.center_crop,
         'image_size':args.image_size,
         'warm_start_from':args.warm_start_from,
+        'vgg16': args.vgg16,
     }
     logging.info('content_weights: {}'.format(params['content_weights']))
     logging.info('style_weights: {}'.format(params['style_weights']))

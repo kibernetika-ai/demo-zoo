@@ -3,7 +3,9 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-import ast
+
+from tensorflow.python.training import session_run_hook
+import logging
 
 slim = tf.contrib.slim
 from models.arbitrary_image_stylization import arbitrary_image_stylization_build_model as build_model
@@ -55,7 +57,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         eval_metric_ops={},
         predictions=stylized_images,
         loss=total_loss,
-        training_hooks=[],
+        training_hooks=[InitVGG16Hook(params['vgg16'])],
         evaluation_hooks=[],
         export_outputs=export_outputs,
         train_op=train_op)
@@ -86,3 +88,24 @@ class Styles(tf.estimator.Estimator):
             params=params,
             warm_start_from=warm_start_from
         )
+
+class InitVGG16Hook(session_run_hook.SessionRunHook):
+    def __init__(self, model_path):
+        self._model_path = model_path
+        self._ops = None
+
+    def begin(self):
+        if self._model_path is not None:
+            self._ops = slim.assign_from_checkpoint_fn(self._model_path,
+                                                   slim.get_variables('vgg_16'))
+
+    def after_create_session(self, session, coord):
+        logging.info('Do VGG16 Init')
+        if self._ops is not None:
+            self._ops(session)
+
+    def before_run(self, run_context):  # pylint: disable=unused-argument
+        return None
+
+    def after_run(self, run_context, run_values):
+        None
