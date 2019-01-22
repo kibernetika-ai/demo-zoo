@@ -272,7 +272,8 @@ def main():
         'image_size':args.image_size,
         'warm_start_from':args.warm_start_from,
     }
-
+    logging.info('content_weights: {}'.format(params['content_weights']))
+    logging.info('style_weights: {}'.format(params['style_weights']))
     if not tf.gfile.Exists(checkpoint_dir):
         tf.gfile.MakeDirs(checkpoint_dir)
 
