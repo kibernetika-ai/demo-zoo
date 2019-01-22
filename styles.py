@@ -139,7 +139,7 @@ def parse_args():
     parser.add_argument(
         '--center_crop',
         type=args_str2bool, nargs='?',
-        const=True, default=True,
+        const=True, default=False,
         help='Weather to center crop the style images.'
     )
     parser.add_argument(

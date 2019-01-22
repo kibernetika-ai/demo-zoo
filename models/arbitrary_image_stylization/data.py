@@ -36,7 +36,7 @@ def imagenet_inputs(dataset, image_size, shuffle=True):
         image = tf.to_float(image) / 255.0
         return image
 
-    return ds.map(_extract).repeat()
+    return ds.map(_extract)
 
 
 def arbitrary_style_image_inputs(dataset,
