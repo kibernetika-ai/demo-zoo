@@ -129,7 +129,7 @@ def pooling(input):
 
 def total_variation(preds):
     # total variation denoising
-    b,w,h,c = preds.get_shape().as_list()
+    _,w,h,_ = preds.get_shape().as_list()
     x = tf.shape(preds)
     n = tf.cast(x[0]*x[1]*x[2]*x[3],tf.float32)
     y_tv = tf.nn.l2_loss(preds[:,1:,:,:] - preds[:,:w-1,:,:])

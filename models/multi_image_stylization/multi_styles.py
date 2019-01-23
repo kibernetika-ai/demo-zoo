@@ -35,7 +35,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
     #if training:
 
     style_control = features['style_control']
-    stylized_images = _mst_net(content_inputs, style_control=style_control)
+    preds = _mst_net(content_inputs/255.0, style_control=style_control)
     export_outputs = None
     if training:
         style_inputs = labels
@@ -44,19 +44,19 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         #logging.info("vgg19 {}".format(weights))
         content_feats = vgg.net(content_inputs - vgg_mean, weights)
         style_feats = vgg.net(style_inputs - vgg_mean, weights)
-        stylized_feats = vgg.net(stylized_images - vgg_mean, weights)
+        net = vgg.net(preds - vgg_mean, weights)
 
-        c_loss = params['content_weights'] * euclidean_loss(stylized_feats[-1], content_feats[-1])
+        c_loss = params['content_weights'] * euclidean_loss(net[-1], content_feats[-1])
         tf.summary.scalar('content_loss', c_loss)
-        s_loss = params['style_weights'] * sum([style_loss(stylized_feats[i], style_feats[i]) for i in range(5)])
+        s_loss = params['style_weights'] * sum([style_loss(net[i], style_feats[i]) for i in range(5)])
         tf.summary.scalar('style_loss', s_loss)
-        tv_loss = params['tv_weights'] * total_variation(stylized_images)
+        tv_loss = params['tv_weights'] * total_variation(preds)
         tf.summary.scalar('tv_loss', tv_loss)
         total_loss = c_loss + s_loss + tv_loss
         # Adding Image summaries to the tensorboard.
         tf.summary.image('image/0_content_inputs', content_inputs, 3)
         tf.summary.image('image/1_style_inputs_aug', style_inputs, 3)
-        tf.summary.image('image/2_stylized_images', stylized_images, 3)
+        tf.summary.image('image/2_stylized_images', preds, 3)
 
         train_op = tf.train.AdamOptimizer(params['learning_rate']).minimize(total_loss,
                                                                             global_step=tf.train.get_or_create_global_step())
