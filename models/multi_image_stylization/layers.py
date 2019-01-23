@@ -1,5 +1,6 @@
 import tensorflow as tf
 import logging
+import functools
 
 def conv_layer(net, num_filters, filter_size, strides, style_control=None, relu=True, name='conv'):
     with tf.variable_scope(name):
@@ -57,6 +58,29 @@ def residual_block(net, filter_size=3, style_control=None, name='res'):
 
 
 
+def conditional_instance_norm0(net, style_control, name='cond_in'):
+    with tf.variable_scope(name):
+        _, _, _, channels = [i.value for i in net.get_shape()]
+        bs,num_styles = [i.value for i in style_control.get_shape()]
+        mu, sigma_sq = tf.nn.moments(net, [1,2], keep_dims=True)
+
+        var_shape = [channels]
+        style_scale = []
+        style_shift = []
+        for l in range(num_styles):
+            with tf.variable_scope('bn_style_{}'.format(l)):
+                shift = tf.get_variable('shift', shape=var_shape, initializer=tf.constant_initializer(0.))
+                scale = tf.get_variable('scale', shape=var_shape, initializer=tf.constant_initializer(1.))
+                style_scale.append(style_control[:,l]*scale)
+                style_shift.append(style_control[:,l]*shift)
+        mean = tf.reduce_sum(style_control)
+        style_scale = functools.reduce(tf.add, style_scale) / mean
+        style_shift = functools.reduce(tf.add, style_shift) / mean
+        epsilon = 1e-3
+        normalized = (net-mu)/(sigma_sq + epsilon)**(.5)
+        output = style_scale * normalized + style_shift
+
+    return output
 
 def conditional_instance_norm(net, style_control, name='cond_in'):
     with tf.variable_scope(name):
@@ -71,11 +95,14 @@ def conditional_instance_norm(net, style_control, name='cond_in'):
 
         style_control = tf.tile(style_control,[1,channels])
         style_control = tf.reshape(style_control,[tf.shape(style_control)[0],channels,num_styles])
-        style_scale = tf.reduce_sum(scale*style_control,axis=-1)
-        style_shift = tf.reduce_sum(shift*style_control,axis=-1)
+        mean = tf.reduce_sum(style_control)
+        style_scale = tf.reduce_sum(scale*style_control,axis=-1)/mean
+        style_shift = tf.reduce_sum(shift*style_control,axis=-1)/mean
         epsilon = 1e-3
         normalized = (net-mu)/(sigma_sq + epsilon)**(.5)
-        output = style_scale * normalized + style_shift
+        style_scale = tf.reshape(style_scale,[tf.shape(style_control)[0],1,1,channels])
+        style_shift = tf.reshape(style_shift,[tf.shape(style_control)[0],1,1,channels])
+        output = normalized * style_scale + style_shift
 
     return output
 
