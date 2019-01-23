@@ -65,12 +65,12 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         train_op = None
         export_outputs = {
             tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: tf.estimator.export.PredictOutput(
-                stylized_images)}
+                preds)}
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
         eval_metric_ops={},
-        predictions=stylized_images,
+        predictions=preds,
         loss=total_loss,
         training_hooks=[],
         evaluation_hooks=[],
