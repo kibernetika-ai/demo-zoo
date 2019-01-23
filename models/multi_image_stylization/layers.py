@@ -95,8 +95,8 @@ def conditional_instance_norm(net, style_control, name='cond_in'):
 
         var_shape = [channels,num_styles]
         with tf.variable_scope('bn_style'):
-            shift = tf.get_variable('shift', shape=var_shape, initializer=tf.constant_initializer(0.))
-            scale = tf.get_variable('scale', shape=var_shape, initializer=tf.constant_initializer(1.))
+            shift = tf.get_variable('shift',trainable=True,shape=var_shape, initializer=tf.constant_initializer(0.))
+            scale = tf.get_variable('scale',trainable=True, shape=var_shape, initializer=tf.constant_initializer(1.))
 
         style_control = tf.tile(style_control,[1,channels])
         style_control = tf.reshape(style_control,[batch_size,channels,num_styles])
