@@ -100,9 +100,9 @@ def conditional_instance_norm(net, style_control, name='cond_in'):
 
         style_control = tf.tile(style_control,[1,channels])
         style_control = tf.reshape(style_control,[batch_size,channels,num_styles])
-        mean = tf.reduce_sum(style_control,axis=-1)
-        style_scale = tf.reduce_sum(scale*style_control,axis=-1)/mean
-        style_shift = tf.reduce_sum(shift*style_control,axis=-1)/mean
+        #mean = tf.reduce_sum(style_control,axis=-1)
+        style_scale = tf.reduce_mean(scale*style_control,axis=-1)
+        style_shift = tf.reduce_mean(shift*style_control,axis=-1)
         epsilon = 1e-3
         normalized = (net-mu)/(sigma_sq + epsilon)**(.5)
         style_scale = tf.reshape(style_scale,[batch_size,1,1,channels])
