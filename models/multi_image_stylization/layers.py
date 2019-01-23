@@ -56,31 +56,7 @@ def residual_block(net, filter_size=3, style_control=None, name='res'):
     return output
 
 
-def conditional_instance_norm_1(net, style_control, name='cond_in'):
-    with tf.variable_scope(name):
-        _, _, _, channels = [i.value for i in net.get_shape()]
-        bs,num_styles = [i.value for i in style_control.get_shape()]
-        mu, sigma_sq = tf.nn.moments(net, [1,2], keep_dims=True)
 
-        var_shape = [channels]
-        for i in range(num_styles):
-            logging.info("Create i {}".format(i))
-            with tf.variable_scope('bn_style_{}'.format(i)):
-                shift = tf.get_variable('shift', shape=var_shape, initializer=tf.constant_initializer(0.))
-                scale = tf.get_variable('scale', shape=var_shape, initializer=tf.constant_initializer(1.))
-            style_scale = tf.reduce_sum(style_control*scale,axis=0)
-        #x = [tf.reduce_sum(scale*i,axis=0) for i in tf.unstack(style_control)]
-        #style_scale = tf.stack(x)
-        #tf.matmul
-        style_control = tf.broadcast_to(style_control,tf.stack([bs,num_styles,channels]))
-        style_scale = tf.reduce_sum(scale*style_control,axis=0)
-        #x = [tf.reduce_sum(shift*i,axis=0) for i in tf.unstack(style_control)]
-        #style_shift = tf.stack(x)
-        style_shift = tf.reduce_sum(shift*style_control,axis=0)
-        epsilon = 1e-3
-        normalized = (net-mu)/(sigma_sq + epsilon)**(.5)
-        tf.nn.batch_normalization
-        output = style_scale * normalized + style_shift
 
 def conditional_instance_norm(net, style_control, name='cond_in'):
     with tf.variable_scope(name):
@@ -94,7 +70,7 @@ def conditional_instance_norm(net, style_control, name='cond_in'):
             scale = tf.get_variable('scale', shape=var_shape, initializer=tf.constant_initializer(1.))
 
         style_control = tf.tile(style_control,[1,channels])
-        style_control = tf.reshape(style_control,[1,channels,num_styles])
+        style_control = tf.reshape(style_control,[tf.shape(style_control)[0],channels,num_styles])
         style_scale = tf.reduce_sum(scale*style_control,axis=-1)
         style_shift = tf.reduce_sum(shift*style_control,axis=-1)
         epsilon = 1e-3
