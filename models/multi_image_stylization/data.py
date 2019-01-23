@@ -7,7 +7,7 @@ import numpy as np
 def train_input_fn(params):
     def _input_fn():
         images = imagenet_inputs(params['images'], params['image_size'])
-        styles = style_image_inputs(params['styles'],image_size=params['image_size'])
+        styles = style_image_inputs(params['styles'],image_size=params['image_size'],styles_count=params['styles_count'])
         ds = tf.data.Dataset.zip((images, styles))
         def _feature(x,y):
             return {'content_inputs': x, 'style_control': y[1]}, y[0]
@@ -35,9 +35,14 @@ def imagenet_inputs(dataset, image_size, shuffle=True):
     return ds.map(_extract_image(image_size))
 
 
-def style_image_inputs(dataset,image_size):
+def style_image_inputs(dataset,image_size,styles_count=None):
     files = glob.glob(dataset)
     files = sorted(files)
+    if styles_count is None:
+        files = [files[0]]
+    elif styles_count >1 :
+        files = files[0:styles_count]
+
     def _generator():
         for i,f in enumerate(files):
             image = Image.open(f).convert('RGB')

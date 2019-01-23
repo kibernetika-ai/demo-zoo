@@ -6,7 +6,7 @@ def conv_layer(net, num_filters, filter_size, strides, style_control=None, relu=
     with tf.variable_scope(name):
         b,w,h,c = net.get_shape().as_list()
         weights_shape = [filter_size, filter_size, c, num_filters]
-        weights_init = tf.get_variable(name, shape=weights_shape, initializer=tf.truncated_normal_initializer(stddev=.01))
+        weights_init = tf.get_variable(name, trainable=True,shape=weights_shape, initializer=tf.truncated_normal_initializer(stddev=.01))
         strides_shape = [1, strides, strides, 1]
 
         p = (filter_size - 1) / 2
@@ -16,8 +16,10 @@ def conv_layer(net, num_filters, filter_size, strides, style_control=None, relu=
             net = tf.nn.conv2d(net, weights_init, strides_shape, padding="VALID")
         else:
             net = tf.nn.conv2d(net, weights_init, strides_shape, padding="SAME")
-
-        net = conditional_instance_norm(net, style_control=style_control)
+        if style_control is not None:
+            net = conditional_instance_norm(net, style_control=style_control)
+        else:
+            net = instance_norm(net)
         if relu:
             net = tf.nn.relu(net)
 
@@ -44,7 +46,10 @@ def conv_tranpose_layer(net, num_filters, filter_size, strides, style_control=No
             net = tf.nn.conv2d_transpose(net, weights_init, tf_shape, strides_shape, padding="VALID")
         else:
             net = tf.nn.conv2d_transpose(net, weights_init, tf_shape, strides_shape, padding="SAME")
-        net = conditional_instance_norm(net, style_control=style_control)
+        if style_control is not None:
+            net = conditional_instance_norm(net, style_control=style_control)
+        else:
+            net = instance_norm(net)
 
     return tf.nn.relu(net)
 
@@ -117,8 +122,8 @@ def instance_norm(net, train=True, name='in'):
         batch, rows, cols, channels = [i.value for i in net.get_shape()]
         var_shape = [channels]
         mu, sigma_sq = tf.nn.moments(net, [1,2], keep_dims=True)
-        shift = tf.get_variable('shift', shape=var_shape, initializer=tf.constant_initializer(0.))
-        scale = tf.get_variable('scale', shape=var_shape, initializer=tf.constant_initializer(1.))
+        shift = tf.get_variable('shift',trainable=True, shape=var_shape, initializer=tf.constant_initializer(0.))
+        scale = tf.get_variable('scale', trainable=True, shape=var_shape, initializer=tf.constant_initializer(1.))
         epsilon = 1e-3
         normalized = (net-mu)/(sigma_sq + epsilon)**(.5)
     return scale * normalized + shift

@@ -34,7 +34,11 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
     content_inputs = features['content_inputs']
     #if training:
 
-    style_control = features['style_control']
+
+    if params['styles_count'] is None:
+        style_control = None
+    else:
+        style_control = features['style_control']
     preds = _mst_net(content_inputs/255.0, style_control=style_control)
     export_outputs = None
     if training:
