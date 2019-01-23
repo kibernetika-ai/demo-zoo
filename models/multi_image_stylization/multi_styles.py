@@ -56,7 +56,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         # Adding Image summaries to the tensorboard.
         tf.summary.image('image/0_content_inputs', content_inputs, 3)
         tf.summary.image('image/1_style_inputs_aug', style_inputs, 3)
-        tf.summary.image('image/2_stylized_images', preds, 3)
+        tf.summary.image('image/2_stylized_images', preds*255.0, 3)
 
         train_op = tf.train.AdamOptimizer(params['learning_rate']).minimize(total_loss,
                                                                             global_step=tf.train.get_or_create_global_step())
