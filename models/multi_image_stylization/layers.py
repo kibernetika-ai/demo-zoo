@@ -58,7 +58,7 @@ def residual_block(net, filter_size=3, style_control=None, name='res'):
 
 
 
-def conditional_instance_norm(net, style_control, name='cond_in'):
+def conditional_instance_norm0(net, style_control, name='cond_in'):
     with tf.variable_scope(name):
         _, _, _, channels = [i.value for i in net.get_shape()]
         _,num_styles = [i.value for i in style_control.get_shape()]
@@ -86,7 +86,7 @@ def conditional_instance_norm(net, style_control, name='cond_in'):
 
     return output
 
-def conditional_instance_norm0(net, style_control, name='cond_in'):
+def conditional_instance_norm(net, style_control, name='cond_in'):
     with tf.variable_scope(name):
         _, _, _, channels = [i.value for i in net.get_shape()]
         _,num_styles = [i.value for i in style_control.get_shape()]
