@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument(
         '--learning_rate',
         type=float,
-        default=1e-2,
+        default=1e-3,
         help='Recommended learning_rate is 2e-4',
     )
     parser.add_argument(
@@ -104,13 +104,13 @@ def parse_args():
     parser.add_argument(
         '--content_weights',
         type=float,
-        default=1.5e0,
+        default=1.5e1,
         help='Content weights'
     )
     parser.add_argument(
         '--style_weights',
         type=float,
-        default=1e2,
+        default=200,
         help='Style weights'
     )
     parser.add_argument(
