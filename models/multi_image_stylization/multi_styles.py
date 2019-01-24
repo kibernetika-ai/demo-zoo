@@ -27,6 +27,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         content_size = params['batch_size'] * layers.tensor_size(results_net[vgg.CONTENT_LAYER])
         content_loss = params['content_weights'] * (2 * tf.nn.l2_loss(
             results_net[vgg.CONTENT_LAYER] - contents_net[vgg.CONTENT_LAYER]) / content_size)
+        logging.info("Content size {}".format(content_size))
         style_loss = params['style_weights'] * layers.style_loss(params['batch_size'], results_net, styles_net,vgg.STYLE_LAYERS)
 
         tv_loss = params['tv_weights'] * layers.total_variation(params['batch_size'], result)
@@ -38,7 +39,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         # Adding Image summaries to the tensorboard.
         tf.summary.image('image/0_content_inputs', content_inputs, 3)
         tf.summary.image('image/1_style_inputs_aug', labels, 3)
-        tf.summary.image('image/2_stylized_images', result, 3)
+        tf.summary.image('image/2_stylized_images', tf.clip_by_value(result,0,255), 3)
 
         train_op = tf.train.AdamOptimizer(params['learning_rate']).minimize(total_loss,
                                                                             global_step=tf.train.get_or_create_global_step())

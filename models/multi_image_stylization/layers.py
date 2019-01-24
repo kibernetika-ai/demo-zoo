@@ -96,6 +96,7 @@ def euclidean_loss(input_, target_):
 def gram_matrix(batch_size, input):
     _, height, width, filters = map(lambda i: i.value, input.get_shape())
     size = height * width * filters
+    logging.info('gramm size {}'.format(size))
     feats = tf.reshape(input, (batch_size, height * width, filters))
     feats_T = tf.transpose(feats, perm=[0, 2, 1])
     return tf.matmul(feats_T, feats) / size
