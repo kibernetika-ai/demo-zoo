@@ -26,7 +26,6 @@ def _extract_image(image_size):
         image = tf.squeeze(image)
         image.set_shape([image_size, image_size, 3])
         image = tf.to_float(image)
-        image = image[..., ::-1]
         return image
     return _extract
 
@@ -48,7 +47,6 @@ def style_image_inputs(dataset,image_size,styles_count=None):
             image = Image.open(f).convert('RGB')
             image = image.resize((image_size, image_size), Image.BILINEAR)
             image = np.asarray(image, np.float32)
-            image = image[:, :, [2, 1, 0]]
             styles_control = np.zeros((len(files)),dtype=np.float32)
             styles_control[i] = 1
             yield (image,styles_control)

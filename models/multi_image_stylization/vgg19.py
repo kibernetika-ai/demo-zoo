@@ -1,11 +1,15 @@
+# Copyright (c) 2015-2016 Anish Athalye. Released under GPLv3.
+
 import tensorflow as tf
 import numpy as np
 import scipy.io
-
+import pdb
 
 MEAN_PIXEL = np.array([ 123.68 ,  116.779,  103.939])
+STYLE_LAYERS = ('relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1')
+CONTENT_LAYER = 'relu4_2'
 
-def net(input_image, data):
+def net(data, input_image):
     layers = (
         'conv1_1', 'relu1_1', 'conv1_2', 'relu1_2', 'pool1',
 
@@ -20,15 +24,9 @@ def net(input_image, data):
         'conv5_1', 'relu5_1', 'conv5_2', 'relu5_2', 'conv5_3',
         'relu5_3', 'conv5_4', 'relu5_4'
     )
-
-    #data = scipy.io.loadmat(data_path)
-    #mean = data['normalization'][0][0][0]
-    #mean_pixel = np.mean(mean, axis=(0, 1))
     weights = data['layers'][0]
-
     net = {}
     current = input_image
-    net['input'] = input_image
     for i, name in enumerate(layers):
         kind = name[:4]
         if kind == 'conv':
@@ -44,8 +42,8 @@ def net(input_image, data):
             current = _pool_layer(current)
         net[name] = current
 
-    #assert len(net) == len(layers)
-    return [net['relu1_1'], net['relu2_1'], net['relu3_1'], net['relu4_1'], net['relu5_1'], net['relu4_2']]
+    assert len(net) == len(layers)
+    return net
 
 
 def _conv_layer(input, weights, bias):
@@ -55,6 +53,13 @@ def _conv_layer(input, weights, bias):
 
 
 def _pool_layer(input):
-    #    return tf.nn.max_pool(input, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1),
-    return tf.nn.avg_pool(input, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1),
+    return tf.nn.max_pool(input, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1),
                           padding='SAME')
+
+
+def preprocess(image):
+    return image - MEAN_PIXEL
+
+
+def unprocess(image):
+    return image + MEAN_PIXEL
