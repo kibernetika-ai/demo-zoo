@@ -17,7 +17,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         style_control = None
     else:
         style_control = features['style_control']
-    result = layers.net(content_inputs)
+    result = layers.net(content_inputs/255.0)
     export_outputs = None
     if training:
         weights = scipy.io.loadmat(params['vgg19'])
