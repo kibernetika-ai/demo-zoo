@@ -24,13 +24,12 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         styles_net = vgg.net(weights, vgg.preprocess(labels))
         contents_net = vgg.net(weights, vgg.preprocess(content_inputs))
         results_net = vgg.net(weights, vgg.preprocess(result))
-        content_size = params['batch_size'] * layers.tensor_size(results_net[vgg.CONTENT_LAYER])
-        content_loss = params['content_weights'] * (2 * tf.nn.l2_loss(
-            results_net[vgg.CONTENT_LAYER] - contents_net[vgg.CONTENT_LAYER]) / content_size)
-        logging.info("Content size {}".format(content_size))
-        style_loss = params['style_weights'] * layers.style_loss(params['batch_size'], results_net, styles_net,vgg.STYLE_LAYERS)
 
-        tv_loss = params['tv_weights'] * layers.total_variation(params['batch_size'], result)
+        content_loss = params['content_weights'] * layers.content_loss(results_net[vgg.CONTENT_LAYER],
+                                                                       contents_net[vgg.CONTENT_LAYER])
+        style_loss = params['style_weights'] * layers.style_loss(results_net, styles_net,vgg.STYLE_LAYERS)
+
+        tv_loss = params['tv_weights'] * layers.total_variation_loss(result)
 
         tf.summary.scalar('content_loss', content_loss)
         tf.summary.scalar('style_loss', style_loss)

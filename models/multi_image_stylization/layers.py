@@ -1,6 +1,5 @@
 import tensorflow as tf
-import logging
-import functools
+import numpy as np
 
 WEIGHTS_INIT_STDEV = .1
 
@@ -76,44 +75,42 @@ def pooling(input):
     return tf.nn.avg_pool(input, ksize=(1, 2, 2, 1), strides=(1, 1, 1, 1), padding='SAME')
 
 
-def total_variation(batch_size, preds):
-    _, h, w, _ = preds.get_shape().as_list()
-    tv_y_size = tensor_size(preds[:, 1:, :, :])
-    tv_x_size = tensor_size(preds[:, :, 1:, :])
-    y_tv = tf.nn.l2_loss(preds[:, 1:, :, :] - preds[:, :h - 1, :, :])
-    x_tv = tf.nn.l2_loss(preds[:, :, 1:, :] - preds[:, :, :w - 1, :])
-    return 2 * (x_tv / tv_x_size + y_tv / tv_y_size) / batch_size
+def gram_matrix(feature_maps):
+    batch_size, height, width, channels = tf.unstack(tf.shape(feature_maps))
+    denominator = tf.to_float(height * width)
+    feature_maps = tf.reshape(
+        feature_maps, tf.stack([batch_size, height * width, channels]))
+    matrix = tf.matmul(feature_maps, feature_maps, adjoint_a=True)
+    return matrix / denominator
 
 
+def total_variation_loss(x):
+    shape = tf.shape(x)
+    batch_size = shape[0]
+    height = shape[1]
+    width = shape[2]
+    channels = shape[3]
+    y_size = tf.to_float((height - 1) * width * channels)
+    x_size = tf.to_float(height * (width - 1) * channels)
+    y_loss = tf.nn.l2_loss(
+        x[:, 1:, :, :] - x[:, :-1, :, :]) / y_size
+    x_loss = tf.nn.l2_loss(
+        x[:, :, 1:, :] - x[:, :, :-1, :]) / x_size
+    loss = (y_loss + x_loss) / tf.to_float(batch_size)
+    return loss
 
-def euclidean_loss(input_, target_):
-    # b,w,h,c = input_.get_shape().as_list()
-    x = tf.shape(input_)
-    n = tf.cast(x[0] * x[1] * x[2] * x[3], tf.float32)
-    return 2 * tf.nn.l2_loss(input_ - target_) / n
+
+def content_loss(x1, x2):
+    loss = tf.reduce_mean((x1 - x2) ** 2)
+    return loss
 
 
-def gram_matrix(batch_size, input):
-    _, height, width, filters = map(lambda i: i.value, input.get_shape())
-    size = height * width * filters
-    logging.info('gramm size {}'.format(size))
-    feats = tf.reshape(input, (batch_size, height * width, filters))
-    feats_T = tf.transpose(feats, perm=[0, 2, 1])
-    return tf.matmul(feats_T, feats) / size
-
-
-def style_loss(batch_size, x1, x2, layers):
-    style_losses = []
+def style_loss(x1, x2, layers):
+    total_style_loss = np.float32(0.0)
     for style_layer in layers:
         x1_layer = x1[style_layer]
         x2_layer = x2[style_layer]
-        x1_grams = gram_matrix(batch_size, x1_layer)
-        x2_grams = gram_matrix(batch_size, x2_layer)
-        size = tensor_size(x1_grams)
-        style_losses.append(2 * tf.nn.l2_loss(x1_grams - x2_grams) / size)
-    return functools.reduce(tf.add, style_losses) / batch_size
+        loss = tf.reduce_mean((gram_matrix(x1_layer) - gram_matrix(x2_layer)) ** 2)
+        total_style_loss += loss
 
-
-def tensor_size(tensor):
-    from operator import mul
-    return functools.reduce(mul, (d.value for d in tensor.get_shape()[1:]), 1)
+    return total_style_loss
