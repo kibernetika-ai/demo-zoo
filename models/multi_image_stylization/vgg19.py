@@ -2,10 +2,9 @@
 
 import tensorflow as tf
 import numpy as np
-import scipy.io
-import pdb
 
-MEAN_PIXEL = np.array([ 123.68 ,  116.779,  103.939])
+
+
 STYLE_LAYERS = ('relu1_1', 'relu2_1', 'relu3_1', 'relu4_1', 'relu5_1')
 CONTENT_LAYER = 'relu4_2'
 
@@ -26,6 +25,8 @@ def net(data, input_image):
     )
     weights = data['layers'][0]
     net = {}
+    input_image *= 255.0
+    input_image -= tf.constant([123.68, 116.779, 103.939], dtype=tf.float32)
     current = input_image
     for i, name in enumerate(layers):
         kind = name[:4]
@@ -55,11 +56,3 @@ def _conv_layer(input, weights, bias):
 def _pool_layer(input):
     return tf.nn.max_pool(input, ksize=(1, 2, 2, 1), strides=(1, 2, 2, 1),
                           padding='SAME')
-
-
-def preprocess(image):
-    return image - MEAN_PIXEL
-
-
-def unprocess(image):
-    return image + MEAN_PIXEL

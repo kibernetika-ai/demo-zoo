@@ -17,17 +17,19 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         style_control = None
     else:
         style_control = features['style_control']
-    result = layers.net(content_inputs/255.0)
+    content_inputs = content_inputs/255.0
+    result = layers.net(content_inputs)
     export_outputs = None
     if training:
         weights = scipy.io.loadmat(params['vgg19'])
-        styles_net = vgg.net(weights, vgg.preprocess(labels))
-        contents_net = vgg.net(weights, vgg.preprocess(content_inputs))
-        results_net = vgg.net(weights, vgg.preprocess(result))
+        labels = labels/255.0
+        styles_net = vgg.net(weights, labels)
+        contents_net = vgg.net(weights, content_inputs)
+        results_net = vgg.net(weights, result)
 
         content_loss = params['content_weights'] * layers.content_loss(results_net[vgg.CONTENT_LAYER],
                                                                        contents_net[vgg.CONTENT_LAYER])
-        style_loss = params['style_weights'] * layers.style_loss(results_net, styles_net,vgg.STYLE_LAYERS)
+        style_loss = params['style_weights'] * layers.style_loss(results_net, styles_net, vgg.STYLE_LAYERS)
 
         tv_loss = params['tv_weights'] * layers.total_variation_loss(result)
 
@@ -36,13 +38,14 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         tf.summary.scalar('tv_loss', tv_loss)
         total_loss = content_loss + style_loss + tv_loss
         # Adding Image summaries to the tensorboard.
-        tf.summary.image('image/0_content_inputs', content_inputs, 3)
-        tf.summary.image('image/1_style_inputs_aug', labels, 3)
-        tf.summary.image('image/2_stylized_images', tf.clip_by_value(result,0,255), 3)
+        tf.summary.image('image/0_content_inputs', content_inputs * 255.0, 3)
+        tf.summary.image('image/1_style_inputs_aug', labels * 255.0, 3)
+        tf.summary.image('image/2_stylized_images', result * 255.0, 3)
 
         train_op = tf.train.AdamOptimizer(params['learning_rate']).minimize(total_loss,
                                                                             global_step=tf.train.get_or_create_global_step())
     else:
+        result = result*255.0
         total_loss = None
         train_op = None
         export_outputs = {
