@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import scipy
+import scipy.io
 import models.multi_image_stylization.vgg19 as vgg
 import tensorflow as tf
 import logging
