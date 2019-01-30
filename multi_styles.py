@@ -98,19 +98,19 @@ def parse_args():
     parser.add_argument(
         '--tv_weights',
         type=float,
-        default=2e2,
+        default=1.e4,
         help='tv weight'
     )
     parser.add_argument(
         '--content_weights',
         type=float,
-        default=1.5e1,
+        default=2,
         help='Content weights'
     )
     parser.add_argument(
         '--style_weights',
         type=float,
-        default=200,
+        default=0.5e-3,
         help='Style weights'
     )
     parser.add_argument(
