@@ -5,7 +5,7 @@ from __future__ import print_function
 import scipy.io
 import models.multi_image_stylization.vgg19 as vgg
 import tensorflow as tf
-from mbr.report.tensorflow_rpt import MlBoardReporter
+from mlboardclient.report.tensorflow_rpt import MlBoardReporter
 
 import models.multi_image_stylization.layers as layers
 
