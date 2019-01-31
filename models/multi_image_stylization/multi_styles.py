@@ -5,7 +5,7 @@ from __future__ import print_function
 import scipy.io
 import models.multi_image_stylization.vgg19 as vgg
 import tensorflow as tf
-import logging
+from  mlboardclient.report.tensorflow_rpt import MlBoardReporter
 
 import models.multi_image_stylization.layers as layers
 
@@ -44,6 +44,8 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
 
         train_op = tf.train.AdamOptimizer(params['learning_rate']).minimize(total_loss,
                                                                             global_step=tf.train.get_or_create_global_step())
+
+        training_chief_hooks = [MlBoardReporter(model_dir,[style_loss,total_loss,tv_loss])]
     else:
         result = result*255.0
         total_loss = None
@@ -51,6 +53,8 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         export_outputs = {
             tf.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY: tf.estimator.export.PredictOutput(
                 result)}
+        training_chief_hooks = None
+
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
@@ -59,6 +63,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         loss=total_loss,
         training_hooks=[],
         evaluation_hooks=[],
+        training_chief_hooks=training_chief_hooks,
         export_outputs=export_outputs,
         train_op=train_op)
 
