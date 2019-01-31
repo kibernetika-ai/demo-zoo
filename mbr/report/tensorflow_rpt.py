@@ -23,6 +23,8 @@ def convert(o):
 
 class MlBoardReporter(session_run_hook.SessionRunHook):
     def __init__(self,checkpoint_dir,tensors=[],submit_summary=True,every_steps=None,every_n_secs=60):
+        if every_steps is not None:
+            every_n_secs = None
         self._timer = tf.train.SecondOrStepTimer(every_steps=every_steps,every_secs=every_n_secs)
         if submit_summary:
             self._rpt = Report(checkpoint_dir)
