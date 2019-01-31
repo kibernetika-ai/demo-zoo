@@ -75,8 +75,15 @@ class Report(object):
         self.event_acc = EventAccumulator(path, self._size_guidance)
         self.max_number_images = max_number_images
 
-    def generate(self):
+    def reload(self):
         self.event_acc.Reload()
+
+    def most_recent_step(self):
+        return self.event_acc.most_recent_step
+
+    def generate(self,reload=True):
+        if reload:
+            self.event_acc.Reload()
         tags = self.event_acc.Tags()
         images = tags.get(IMAGES,[])
         scalars = tags.get(SCALARS,[])

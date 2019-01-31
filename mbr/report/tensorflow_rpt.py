@@ -46,6 +46,7 @@ class MlBoardReporter(session_run_hook.SessionRunHook):
 
         self._mlboard = mlboard
         self._tensors = tensors
+        self._most_recent_step = 0
 
     def begin(self):
         self._next_step = None
@@ -79,10 +80,13 @@ class MlBoardReporter(session_run_hook.SessionRunHook):
                     if v is not None:
                         rpt[k] = v
                 if self._rpt is not None:
-                    tf.logging.info("Generate report doc")
-                    rpt['#documents.report.html'] = self._rpt.generate()
+                    self._rpt.reload()
+                    most_recent_step = self._rpt.most_recent_step()
+                    if most_recent_step>self._most_recent_step:
+                        rpt['#documents.report.html'] = self._rpt.generate(reload=False)
+                        self._most_recent_step = most_recent_step
+
                 if len(rpt)>0:
-                    tf.logging.info("Submit job info")
                     self._mlboard.update_task_info(rpt)
         self._next_step = global_step + 1
 
