@@ -2,7 +2,7 @@ from tensorflow.python.training import session_run_hook
 from tensorflow.python.training import training_util
 from tensorflow.python.training.session_run_hook import SessionRunArgs
 import tensorflow as tf
-from  mlboardclient.report.tensorlogs import Report
+from mbr.report.tensorlogs import Report
 
 
 class MlBoardReporter(session_run_hook.SessionRunHook):
