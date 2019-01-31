@@ -49,7 +49,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
             model_dir,
             {"style_loss":style_loss,
              'total_loss':total_loss,
-             'tv_loss':tv_loss},every_steps=1)]
+             'tv_loss':tv_loss},every_steps=params['save_summary_steps'])]
     else:
         result = result*255.0
         total_loss = None
