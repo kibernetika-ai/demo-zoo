@@ -79,7 +79,16 @@ class Report(object):
         self.event_acc.Reload()
 
     def most_recent_step(self):
-        return self.event_acc.most_recent_step
+        if self.event_acc.most_recent_step>0:
+            return self.event_acc.most_recent_step
+        tags = self.event_acc.Tags()
+        scalars = tags.get(SCALARS,[])
+        max_step = -1
+        for s in scalars:
+            step = self.event_acc.Scalars(s)[-1].step
+            if step>max_step:
+                max_step = step
+        return max_step
 
     def generate(self,reload=True):
         if reload:
