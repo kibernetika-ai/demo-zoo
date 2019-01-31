@@ -22,12 +22,12 @@ def convert(o):
     return None
 
 class MlBoardReporter(session_run_hook.SessionRunHook):
-    def __init__(self,checkpoint_dir,tensors=[],submit_summary=True,every_steps=None,every_n_secs=60):
+    def __init__(self,checkpoint_dir,tensors={},submit_summary=True,max_number_images=1,every_steps=None,every_n_secs=60):
         if every_steps is not None:
             every_n_secs = None
         self._timer = tf.train.SecondOrStepTimer(every_steps=every_steps,every_secs=every_n_secs)
         if submit_summary:
-            self._rpt = Report(checkpoint_dir)
+            self._rpt = Report(checkpoint_dir,max_number_images=max_number_images)
         else:
             self._rpt = None
         try:
@@ -56,8 +56,8 @@ class MlBoardReporter(session_run_hook.SessionRunHook):
 
     def before_run(self, run_context):  # pylint: disable=unused-argument
         requests = {"global_step": self._global_step_tensor}
-        for t in self._tensors:
-            requests[t.name] = t
+        for n,t in self._tensors:
+            requests[n] = t
         self._generate = (
                 self._next_step is None or
                 self._timer.should_trigger_for_step(self._next_step))

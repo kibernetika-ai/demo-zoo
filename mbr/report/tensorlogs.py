@@ -24,6 +24,16 @@ DEFAULT_SIZE_GUIDANCE = {
     TENSORS: 0,
 }
 
+def image_name(name):
+    p = name.split('/')
+    if len(p)<2:
+        return name,0
+    try:
+        n = int(p[-1])
+        return (name,n)
+    except:
+        return (name,0)
+
 def is_outlier(points, thresh=3.5):
     """
     Returns a boolean array with True if points are outliers and False
@@ -58,9 +68,12 @@ def is_outlier(points, thresh=3.5):
     return modified_z_score > thresh
 
 class Report(object):
-    def __init__(self,path,size_guidance=None):
+    def __init__(self,path,max_number_images=1,size_guidance=None):
         self._size_guidance =  size_guidance or DEFAULT_SIZE_GUIDANCE
+        if max_number_images==0:
+            self._size_guidance[IMAGES] = 0
         self.event_acc = EventAccumulator(path, self._size_guidance)
+        self.max_number_images = max_number_images
 
     def generate(self):
         self.event_acc.Reload()
@@ -70,11 +83,15 @@ class Report(object):
         graphs = []
         for s in scalars:
             img = self.plot_scalar(s)
-            graphs.append('<figure><img src="data:image/png;base64,{}"/></figure>'.format(img))
+            graphs.append('<img src="data:image/png;base64,{}"/>'.format(img))
         graphs.append('<br/>')
-        for i in images:
-            img = self.plot_image(i)
-            graphs.append('<figure><img src="data:image/png;base64,{}"/><figcaption>{}</figcaption></figure>'.format(img,i))
+        if self.max_number_images > 0:
+            for i in images:
+                name,index = image_name(i)
+                if index>=self.max_number_images:
+                    continue
+                img = self.plot_image(i)
+                graphs.append('<figure><img src="data:image/png;base64,{}"/><figcaption>{}</figcaption></figure>'.format(img,name))
         return '<html>{}</html>'.format('\n'.join(graphs))
 
     def plot_image(self,name):
