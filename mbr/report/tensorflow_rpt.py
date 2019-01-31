@@ -56,7 +56,7 @@ class MlBoardReporter(session_run_hook.SessionRunHook):
 
     def before_run(self, run_context):  # pylint: disable=unused-argument
         requests = {"global_step": self._global_step_tensor}
-        for n,t in self._tensors:
+        for n,t in self._tensors.items():
             requests[n] = t
         self._generate = (
                 self._next_step is None or
