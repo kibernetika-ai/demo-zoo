@@ -3,7 +3,23 @@ from tensorflow.python.training import training_util
 from tensorflow.python.training.session_run_hook import SessionRunArgs
 import tensorflow as tf
 from mbr.report.tensorlogs import Report
+import numpy as np
 
+
+def convert(o):
+    if isinstance(o, np.int64): return int(o)
+    if isinstance(o, np.int32): return int(o)
+    if isinstance(o, np.int): return int(o)
+    if isinstance(o, np.float32): return float(o)
+    if isinstance(o, np.float64): return float(o)
+    if isinstance(o, np.float): return float(o)
+    if isinstance(o, tf.int64): return int(o)
+    if isinstance(o, tf.int32): return int(o)
+    if isinstance(o, tf.int): return int(o)
+    if isinstance(o, tf.float32): return float(o)
+    if isinstance(o, tf.float64): return float(o)
+    if isinstance(o, tf.float): return float(o)
+    return None
 
 class MlBoardReporter(session_run_hook.SessionRunHook):
     def __init__(self,checkpoint_dir,tensors=[],submit_summary=True,every_steps=None,every_n_secs=60):
@@ -57,7 +73,9 @@ class MlBoardReporter(session_run_hook.SessionRunHook):
             if self._generate and (self._next_step is not None):
                 rpt = {}
                 for k,v in run_values.results.items():
-                    rpt[k] = v
+                    v = convert(v)
+                    if v is not None:
+                        rpt[k] = v
                 if self._rpt is not None:
                     tf.logging.info("Generate report doc")
                     rpt['#documents.report.html'] = self._rpt.generate()

@@ -45,7 +45,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         train_op = tf.train.AdamOptimizer(params['learning_rate']).minimize(total_loss,
                                                                             global_step=tf.train.get_or_create_global_step())
 
-        training_chief_hooks = [MlBoardReporter(model_dir,[style_loss,total_loss,tv_loss])]
+        training_chief_hooks = [MlBoardReporter(model_dir,[style_loss,total_loss,tv_loss],every_steps=1)]
     else:
         result = result*255.0
         total_loss = None
