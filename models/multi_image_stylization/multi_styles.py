@@ -13,10 +13,10 @@ import models.multi_image_stylization.layers as layers
 def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir=None):
     training = (mode == tf.estimator.ModeKeys.TRAIN)
     content_inputs = features['content_inputs']
-    if params['styles_count'] is None:
-        style_control = None
-    else:
-        style_control = features['style_control']
+    #if params['styles_count'] is None:
+    #    style_control = None
+    #else:
+    #    style_control = features['style_control']
     content_inputs = content_inputs/255.0
     result = layers.net(content_inputs)
     export_outputs = None
