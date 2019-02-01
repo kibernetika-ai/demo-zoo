@@ -1,0 +1,29 @@
+storage:
+ value: default
+ wizard:
+   name: "Storage Configuration"
+   kind: cluster_storage
+
+dataset:
+ value: styles-transfer
+ version: '1.0.0'
+ workspace: 'kuberlab-demo'
+ wizard:
+   name: "Dataset version"
+   kind: dataset
+
+pretrained:
+  value: arbitrary_style_transfer
+  version: '0.0.1'
+  workspace: 'kuberlab-demo'
+  wizard:
+    name: "Arbitrary Style Pretrained"
+    kind: model
+
+vgg:
+  value: vgg
+  version: '0.0.1'
+  workspace: 'kuberlab-demo'
+  wizard:
+    name: "VGG Pretrained"
+    kind: model

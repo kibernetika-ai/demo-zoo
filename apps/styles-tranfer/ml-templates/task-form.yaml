@@ -1,0 +1,42 @@
+- name: use_gpu
+  label: Use gpu for training
+  value: true
+  type: boolean
+
+- name: types
+  type: select
+  value: multi-style
+  options:
+  - multi-style
+  - arbitrary-style
+
+- name: style
+  label: Style for training
+  type: select
+  value: pencil
+  options:
+    - pencil
+    - la_muse
+    - the_scream
+    - undnie
+    - wave
+
+- name: batch_size
+  value: 10
+  type: int
+  label: Training batch size
+
+- name: epochs
+  value: 1
+  type: int
+  label: Number of epoch to train
+
+- name: style_weight
+  value: 0.5e-3
+  type: float
+  label: Styles transfer weight
+
+- name: content_weight
+  value: 2
+  type: float
+  label: Original Content weight

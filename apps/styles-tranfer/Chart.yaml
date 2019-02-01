@@ -1,0 +1,15 @@
+Description: Style Tranfer demo
+Engine: gotpl
+Home: http://kuberlab.com
+Icon: https://storage.googleapis.com/kuberlab-images/udnie.jpg
+Keywords:
+- kuberlab
+- tensorflow
+- style
+- tutorial
+Maintainers:
+- Email: agunin@kuberlab.com
+  Name: Gunin Alexander
+Name: styles-transfer
+Version: 1.0.0
+Type: mlapp-v2

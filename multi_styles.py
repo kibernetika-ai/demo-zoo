@@ -135,10 +135,10 @@ def parse_args():
         help='Vgg16 model',
     )
     parser.add_argument(
-        '--styles_count',
-        type=int,
+        '--style',
+        type=str,
         default=None,
-        help='Styles count',
+        help='Style',
     )
 
     group = parser.add_mutually_exclusive_group(required=True)
@@ -256,7 +256,7 @@ def main():
         'image_size':args.image_size,
         'warm_start_from':args.warm_start_from,
         'vgg19': args.vgg19,
-        'styles_count': args.styles_count,
+        'style': args.style,
     }
     logging.info('content_weights: {}'.format(params['content_weights']))
     logging.info('style_weights: {}'.format(params['style_weights']))

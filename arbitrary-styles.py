@@ -6,11 +6,7 @@ import configparser
 from models.arbitrary_image_stylization import arbitrary_image_stylization as style
 from models.arbitrary_image_stylization import data
 import json
-import ast
 
-DEFAULT_CONTENT_WEIGHTS = '{"vgg_16/conv3": 1}'
-DEFAULT_STYLE_WEIGHTS = ('{"vgg_16/conv1": 0.5e-3, "vgg_16/conv2": 0.5e-3,'
-                         ' "vgg_16/conv3": 0.5e-3, "vgg_16/conv4": 0.5e-3}')
 
 def args_str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -108,14 +104,14 @@ def parse_args():
     )
     parser.add_argument(
         '--content_weights',
-        type=str,
-        default=DEFAULT_CONTENT_WEIGHTS,
+        type=float,
+        default=2,
         help='Content weights'
     )
     parser.add_argument(
         '--style_weights',
-        type=str,
-        default=DEFAULT_STYLE_WEIGHTS,
+        type=float,
+        default=0.5e-3,
         help='Style weights'
     )
     parser.add_argument(
@@ -127,19 +123,19 @@ def parse_args():
     parser.add_argument(
         '--random_style_image_size',
         type=args_str2bool, nargs='?',
-        const=True, default=True,
+        const=True, default=False,
         help='Weather to augment style images or not.'
     )
     parser.add_argument(
         '--augment_style_images',
         type=args_str2bool, nargs='?',
-        const=True, default=True,
+        const=True, default=False,
         help='Weather to resize the style images to a random size or not.'
     )
     parser.add_argument(
         '--center_crop',
         type=args_str2bool, nargs='?',
-        const=True, default=False,
+        const=True, default=True,
         help='Weather to center crop the style images.'
     )
     parser.add_argument(
@@ -189,7 +185,7 @@ def export(checkpoint_dir, params):
         'input': tf.placeholder(tf.float32, [1, 256, 256, 3], name='input'),
 
     }
-    receiver = tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholders,default_batch_size=1)
+    receiver = tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholders, default_batch_size=1)
     net = style.Styles(
         params=params,
         model_dir=checkpoint_dir,
@@ -266,19 +262,21 @@ def main():
         'images': args.images,
         'styles': args.styles,
         'epoch': args.epoch,
-        'content_weights':ast.literal_eval(args.content_weights),
-        'style_weights':ast.literal_eval(args.style_weights),
-        'clip_gradient_norm':args.clip_gradient_norm,
-        'total_variation_weight':args.total_variation_weight,
-        'random_style_image_size':args.random_style_image_size,
-        'augment_style_images':args.augment_style_images,
-        'center_crop':args.center_crop,
-        'image_size':args.image_size,
-        'warm_start_from':args.warm_start_from,
+        'content_weights': {'vgg_16/conv3': args.content_weights},
+        'style_weights': {'vgg_16/conv1': args.style_weights,
+                          'vgg_16/conv2': args.style_weights,
+                          'vgg_16/conv3': args.style_weights,
+                          'vgg_16/conv4': args.style_weights},
+        'clip_gradient_norm': args.clip_gradient_norm,
+        'total_variation_weight': args.total_variation_weight,
+        'random_style_image_size': args.random_style_image_size,
+        'augment_style_images': args.augment_style_images,
+        'center_crop': args.center_crop,
+        'image_size': args.image_size,
+        'warm_start_from': args.warm_start_from,
         'vgg16': args.vgg16,
     }
-    logging.info('content_weights: {}'.format(params['content_weights']))
-    logging.info('style_weights: {}'.format(params['style_weights']))
+
     if not tf.gfile.Exists(checkpoint_dir):
         tf.gfile.MakeDirs(checkpoint_dir)
 
