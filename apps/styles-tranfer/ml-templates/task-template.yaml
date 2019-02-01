@@ -14,8 +14,10 @@ resources:
   {{ end }}
   workdir: "$SRC_DIR"
   resources:
+    {{- if .use_gpu }}
     accelerators:
-      gpu: 0
+      gpu: 1
+    {{- end }}
     requests:
       cpu: 100m
       memory: 1Gi
