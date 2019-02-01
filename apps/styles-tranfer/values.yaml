@@ -5,9 +5,9 @@ storage:
    kind: cluster_storage
 
 dataset:
- value: styles-transfer
+ value: coco
  version: '1.0.0'
- workspace: 'kuberlab-demo'
+ workspace: '1.0.0-2014'
  wizard:
    name: "Dataset version"
    kind: dataset
