@@ -4,7 +4,7 @@ import glob
 from PIL import Image
 import numpy as np
 import os
-
+import logging
 
 def train_input_fn(params):
     def _input_fn():
@@ -59,6 +59,7 @@ def style_image_inputs(dataset, image_size, style=None):
             files = all_files[0]
     else:
         files = all_files
+    logging.info('Use styles: {}'.format(files))
 
     def _generator():
         for i, f in enumerate(files):
