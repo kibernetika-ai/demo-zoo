@@ -137,7 +137,7 @@ spec:
     name: vgg
     model:
       workspace: {{ .vgg.workspace }}
-      dataset: {{ .vgg.value }}
+      model: {{ .vgg.value }}
       version: {{ .vgg.version }}
   {{ end }}
   {{- if .pretrained.value }}
@@ -145,6 +145,6 @@ spec:
     name: pretrained
     model:
       workspace: {{ .pretrained.workspace }}
-      dataset: {{ .pretrained.value }}
+      model: {{ .pretrained.value }}
       version: {{ .pretrained.version }}
   {{ end }}
