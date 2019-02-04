@@ -83,7 +83,7 @@ def build_model(is_inference, content_input_,
                                                      inception_end_point=inception_end_point,
                                                      style_prediction_bottleneck=style_prediction_bottleneck,
                                                      reuse=True)
-        bottleneck_feat = content_bottleneck_feat * (1 - 0.8) + style_bottleneck_feat * 0.2
+        bottleneck_feat = content_bottleneck_feat * 0.8 + style_bottleneck_feat * 0.2
     else:
         bottleneck_feat = style_bottleneck_feat
 
