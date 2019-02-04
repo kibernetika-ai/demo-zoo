@@ -70,8 +70,9 @@ def preprocess(inputs, ctx):
 def postprocess(outputs, ctx):
     image = outputs['output'][0]
     image_bytes = io.BytesIO()
+    image = Image.fromarray(np.uint8(image*255))
     image = image.resize(image,(ctx.original_w,ctx.original_h),Image.BILINEAR)
-    Image.fromarray(np.uint8(image*255)).save(image_bytes, format='JPEG')
+    image.save(image_bytes, format='JPEG')
     return {'output': image_bytes.getvalue()}
 
 
