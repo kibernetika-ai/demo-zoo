@@ -20,7 +20,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
     stylized_images, total_loss, loss_dict, _ = build_model.build_model(
         content_inputs_,
         style_inputs_,
-        trainable=True,
+        trainable=training,
         is_training=training,
         inception_end_point='Mixed_6e',
         style_prediction_bottleneck=100,
