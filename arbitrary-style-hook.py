@@ -57,13 +57,14 @@ def preprocess(inputs, ctx):
     style = styles[style]
 
     content_image = tensor_load_rgbimage(content_image,max_size)
-
+    ctx.content_image = content_image
     return {'content_inputs': [content_image],
             'style_inputs': [style]}
 
 
 def postprocess(outputs, ctx):
     image = outputs['output'][0]
+    image = ctx.content_image
     image_bytes = io.BytesIO()
     image = Image.fromarray(np.uint8(image*255))
     image = image.resize((int(ctx.original_w),int(ctx.original_h)),Image.BILINEAR)
