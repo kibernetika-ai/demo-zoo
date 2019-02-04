@@ -18,6 +18,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
     style_inputs_ = features['style_inputs']
 
     stylized_images, total_loss, loss_dict, _ = build_model.build_model(
+        not training,
         content_inputs_,
         style_inputs_,
         trainable=training,
@@ -89,6 +90,7 @@ class Styles(tf.estimator.Estimator):
             warm_start_from=warm_start_from
         )
 
+
 class InitVGG16Hook(session_run_hook.SessionRunHook):
     def __init__(self, model_path):
         self._model_path = model_path
@@ -97,7 +99,7 @@ class InitVGG16Hook(session_run_hook.SessionRunHook):
     def begin(self):
         if self._model_path is not None:
             self._ops = slim.assign_from_checkpoint_fn(self._model_path,
-                                                   slim.get_variables('vgg_16'))
+                                                       slim.get_variables('vgg_16'))
 
     def after_create_session(self, session, coord):
         logging.info('Do VGG16 Init')

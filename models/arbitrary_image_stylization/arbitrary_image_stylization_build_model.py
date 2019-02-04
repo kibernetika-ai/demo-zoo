@@ -27,7 +27,7 @@ from tensorflow.contrib.slim.python.slim.nets import inception_v3
 slim = tf.contrib.slim
 
 
-def build_model(content_input_,
+def build_model(is_inference, content_input_,
                 style_input_,
                 trainable,
                 is_training,
@@ -69,14 +69,29 @@ def build_model(content_input_,
      activation_depths] = transformer_model.style_normalization_activations()
 
     # Defines the style prediction network.
-    style_params, bottleneck_feat = style_prediction(
-        style_input_,
+    style_bottleneck_feat = bottleneck_feat_fn(style_input_,
+                                               is_training=is_training,
+                                               trainable=trainable,
+                                               inception_end_point=inception_end_point,
+                                               style_prediction_bottleneck=style_prediction_bottleneck,
+                                               reuse=reuse)
+
+    if is_inference:
+        content_bottleneck_feat = bottleneck_feat_fn(content_input_,
+                                                     is_training=is_training,
+                                                     trainable=trainable,
+                                                     inception_end_point=inception_end_point,
+                                                     style_prediction_bottleneck=style_prediction_bottleneck,
+                                                     reuse=True)
+        bottleneck_feat = content_bottleneck_feat * (1 - 0.8) + style_bottleneck_feat * 0.2
+    else:
+        bottleneck_feat = style_bottleneck_feat
+
+    style_params = style_prediction_fn(
         activation_names,
         activation_depths,
-        is_training=is_training,
+        bottleneck_feat,
         trainable=trainable,
-        inception_end_point=inception_end_point,
-        style_prediction_bottleneck=style_prediction_bottleneck,
         reuse=reuse)
 
     # Defines the style transformer network.
@@ -103,33 +118,12 @@ def build_model(content_input_,
     return stylized_images, total_loss, loss_dict, bottleneck_feat
 
 
-def style_prediction(style_input_,
-                     activation_names,
-                     activation_depths,
-                     is_training=True,
-                     trainable=True,
-                     inception_end_point='Mixed_6e',
-                     style_prediction_bottleneck=100,
-                     reuse=None):
-    """Maps style images to the style embeddings (beta and gamma parameters).
-    Args:
-      style_input_: Tensor. Batch of style input images.
-      activation_names: string. Scope names of the activations of the transformer
-          network which are used to apply style normalization.
-      activation_depths: Shapes of the activations of the transformer network
-          which are used to apply style normalization.
-      is_training: bool. Is it training phase or not?
-      trainable: bool. Should the parameters be marked as trainable?
-      inception_end_point: string. Specifies the endpoint to construct the
-          inception_v3 network up to. This network is part of the style prediction
-          network.
-      style_prediction_bottleneck: int. Specifies the bottleneck size in the
-          number of parameters of the style embedding.
-      reuse: bool. Whether to reuse model parameters. Defaults to False.
-    Returns:
-      Tensor for the output of the style prediction network, Tensor for the
-          bottleneck of style parameters of the style prediction network.
-    """
+def bottleneck_feat_fn(style_input_,
+                       is_training=True,
+                       trainable=True,
+                       inception_end_point='Mixed_6e',
+                       style_prediction_bottleneck=100,
+                       reuse=None):
     with tf.name_scope('style_prediction') and tf.variable_scope(
             tf.get_variable_scope(), reuse=reuse):
         with slim.arg_scope(_inception_v3_arg_scope(is_training=is_training)):
@@ -162,6 +156,16 @@ def style_prediction(style_input_,
                 bottleneck_feat = slim.conv2d(bottleneck_feat,
                                               style_prediction_bottleneck, [1, 1])
 
+    return bottleneck_feat
+
+
+def style_prediction_fn(activation_names,
+                        activation_depths,
+                        bottleneck_feat,
+                        trainable=True,
+                        reuse=None):
+    with tf.name_scope('style_prediction') and tf.variable_scope(
+            tf.get_variable_scope(), reuse=reuse):
         style_params = {}
         with tf.variable_scope('style_params'):
             for i in range(len(activation_depths)):
@@ -171,7 +175,6 @@ def style_prediction(style_input_,
                             activation_fn=None,
                             normalizer_fn=None,
                             trainable=trainable):
-
                         # Computing beta parameter of the style normalization for the
                         # activation_names[i] layer of the style transformer network.
                         # (batch_size, 1, 1, activation_depths[i])
@@ -188,7 +191,7 @@ def style_prediction(style_input_,
                         gamma = tf.squeeze(gamma, [1, 2], name='SpatialSqueeze')
                         style_params['{}/gamma'.format(activation_names[i])] = gamma
 
-    return style_params, bottleneck_feat
+    return style_params
 
 
 def _inception_v3_arg_scope(is_training=True,
