@@ -181,8 +181,10 @@ def export(checkpoint_dir, params):
     conf = tf.estimator.RunConfig(
         model_dir=checkpoint_dir,
     )
+
     feature_placeholders = {
-        'input': tf.placeholder(tf.float32, [1, 256, 256, 3], name='input'),
+        'content_inputs': tf.placeholder(tf.float32, [1, 256, 256, 3], name='content_inputs'),
+        'style_inputs': tf.placeholder(tf.float32, [1, 256, 256, 3], name='style_inputs'),
 
     }
     receiver = tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholders, default_batch_size=1)
