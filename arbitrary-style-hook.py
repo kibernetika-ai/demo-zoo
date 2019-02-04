@@ -16,7 +16,6 @@ shornames = {'mosaic': 'mosaic', 'picasso': 'picasso_selfport1907', 'robert': 'r
 
 
 PARAMS = {
-    'max_size': '256',
     'styles_path': './data/styles'
 }
 
@@ -24,10 +23,6 @@ def init_hook(**params):
     LOG.info('Loaded. {}'.format(params))
     global PARAMS
     PARAMS.update(params)
-    global max_size
-    max_size = PARAMS.get('max_size', '256')
-    max_size = int(max_size)
-    LOG.info('Max size {}'.format(max_size))
     for m in glob.glob(PARAMS['styles_path'] + '/*.jpg'):
         img = Image.open(m)
         style = tensor_load_rgbimage(img,max_size)
