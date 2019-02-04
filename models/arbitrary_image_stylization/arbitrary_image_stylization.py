@@ -21,7 +21,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         not training,
         content_inputs_,
         style_inputs_,
-        trainable=training,
+        trainable=True,
         is_training=training,
         inception_end_point='Mixed_6e',
         style_prediction_bottleneck=100,
