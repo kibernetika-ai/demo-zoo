@@ -14,7 +14,7 @@ spec:
       images:
         gpu: kuberlab/tensorflow:gpu-36-1.9.0-full
         cpu: kuberlab/tensorflow:cpu-36-1.9.0-full
-      command: python arbitrary-styles.py --worker --images "$DATA_DIR/*.jpg" --styles  "./data/styles/*.jpg" --batch_size 8 --warm_start_from $PRETRAINED_DIR/model.ckpt --log_step_count_steps 1 --save_summary_steps 10 --learning_rate 1e-5 --content_weights 2.0  --style_weights 0.5e-3 --vgg16 $VGG_DIR/vgg_16.ckpt --image_size 256 --style pencil
+      command: python arbitrary-styles.py --worker --images "$DATA_DIR/*.jpg" --styles  "./data/styles/*.jpg" --batch_size 8 --warm_start_from $PRETRAINED_DIR/model.ckpt --log_step_count_steps 1 --save_summary_steps 10 --learning_rate 1e-5 --content_weights 2.0  --style_weights 0.5e-3 --vgg16 $VGG_DIR/vgg_16.ckpt --image_size 256
       workdir: "$SRC_DIR"
       resources:
         accelerators:
@@ -36,7 +36,7 @@ spec:
       images:
         gpu: kuberlab/tensorflow:gpu-36-1.9.0-full
         cpu: kuberlab/tensorflow:cpu-36-1.9.0-full
-      command: python multi_styles.py --worker --images "$DATA_DIR/*.jpg" --styles  "./data/styles/*.jpg" --batch_size 8  --vgg19 $VGG_DIR/vgg19.mat --epoch 10 --content_weights 2 --style_weights 0.5e-3
+      command: python multi_styles.py --worker --images "$DATA_DIR/*.jpg" --styles  "./data/styles/*.jpg" --batch_size 8  --vgg19 $VGG_DIR/vgg19.mat --epoch 10 --content_weights 2 --style_weights 0.5e-3  --style pencil
       workdir: "$SRC_DIR"
       resources:
         accelerators:
