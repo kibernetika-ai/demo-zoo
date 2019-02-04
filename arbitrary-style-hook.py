@@ -64,6 +64,8 @@ def preprocess(inputs, ctx):
 
 def postprocess(outputs, ctx):
     image = outputs['output'][0]
+    logging.info("Max: {}".format(np.max(image)))
+    logging.info("Min: {}".format(np.min(image)))
     ##image = ctx.content_image
     image_bytes = io.BytesIO()
     image = Image.fromarray(np.uint8(image*255))
