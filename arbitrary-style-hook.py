@@ -63,8 +63,8 @@ def preprocess(inputs, ctx):
 
     content_image = tensor_load_rgbimage(content_image, size=max_size, keep_asp=True)
 
-    return {'content_inputs': content_image,
-            'style_inputs': style}
+    return {'content_inputs': [content_image],
+            'style_inputs': [style]}
 
 
 def postprocess(outputs, ctx):
