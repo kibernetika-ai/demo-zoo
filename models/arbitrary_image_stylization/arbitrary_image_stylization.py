@@ -18,7 +18,6 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
     style_inputs_ = features['style_inputs']
 
     stylized_images, total_loss, loss_dict, _ = build_model.build_model(
-        not training,
         content_inputs_,
         style_inputs_,
         trainable=True,
