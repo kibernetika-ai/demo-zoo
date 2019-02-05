@@ -25,7 +25,7 @@ def _styles_model_fn(features, labels, mode, params=None, config=None, model_dir
         is_training=training,
         inception_end_point='Mixed_6e',
         style_prediction_bottleneck=100,
-        adds_losses=True,
+        adds_losses=training,
         content_weights=params['content_weights'],
         style_weights=params['style_weights'],
         total_variation_weight=params['total_variation_weight'])

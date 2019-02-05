@@ -27,7 +27,7 @@ from tensorflow.contrib.slim.python.slim.nets import inception_v3
 slim = tf.contrib.slim
 
 
-def build_model(is_inference, content_input_,
+def build_model(content_input_,
                 style_input_,
                 trainable,
                 is_training,
@@ -76,7 +76,7 @@ def build_model(is_inference, content_input_,
                                                style_prediction_bottleneck=style_prediction_bottleneck,
                                                reuse=reuse)
 
-    if is_inference:
+    if is_training:
         content_bottleneck_feat = bottleneck_feat_fn(content_input_,
                                                      is_training=is_training,
                                                      trainable=trainable,
