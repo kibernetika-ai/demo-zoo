@@ -22,7 +22,7 @@ def process(inputs, ctx, **kwargs):
 
     x = int(image.shape[1] / 2)
     y = int(image.shape[0] / 2)
-    image = cv2.putText(image, 'Powered by Kibernetika.AI', (x, y), cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255),
+    cv2.putText(image, 'Powered by Kibernetika.AI', (x, y), cv2.FONT_HERSHEY_SIMPLEX, 4, (255, 255, 255),
                         thickness=2, lineType=cv2.LINE_AA)
     if videoInput:
         return {'output': image}
