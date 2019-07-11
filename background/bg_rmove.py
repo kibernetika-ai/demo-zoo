@@ -1,11 +1,10 @@
 import numpy as np
 import logging
 import cv2
+from ml_serving.utils import helpers
 
 LOG = logging.getLogger(__name__)
 LOG.setLevel(logging.INFO)
-
-from ml_serving.utils import helpers
 
 resolution = 160
 
@@ -42,6 +41,7 @@ def preprocess(inputs, ctx, **kwargs):
 
 
 def postprocess(outputs, ctx, **kwargs):
+    global back
     mask = outputs['output']
     mask = mask[0]
     if mask.shape[0] != ctx.h or mask.shape[1] != ctx.w:
@@ -50,7 +50,6 @@ def postprocess(outputs, ctx, **kwargs):
         mask = np.expand_dims(mask,2)
     lback = back
     if mask.shape[0]!=lback.shape[0] or mask.shape[1]!=lback.shape[1]:
-        global back
         lback = cv2.resize(back, (ctx.w, ctx.h))
         back = lback
     output = ctx.input * mask+lback*(1-mask)
