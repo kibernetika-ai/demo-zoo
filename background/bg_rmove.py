@@ -9,7 +9,7 @@ from ml_serving.utils import helpers
 
 resolution = 160
 
-back = None
+back = np.zeros((1,1,3),np.uint8)
 
 def init_hook(**kwargs):
     global back
