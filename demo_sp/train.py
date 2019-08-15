@@ -99,6 +99,7 @@ def main():
     y_pred=gbm.predict(x_eval)
     y_pred = np.reshape(ysc.inverse_transform(np.reshape(y_pred,(-1,1))),-1)
     mae = mean_absolute_error(y_pred,y)
+    logging.info('Final MAE: {}'.format(int(mae)))
     update_task_info({'mae':mae})
     version = args.version+'-'+args.exp
     mlboard.model_upload(args.model,version, args.dst)
