@@ -41,6 +41,7 @@ def process(inputs, ctx, **kwargs):
     data = data.fillna(0)
     results = []
     for k, v in data.groupby(['no']):
+        v = v.reset_index(drop=True)
         x = v.loc[v.shape[0] - PARAMS['deps'] - 1:, metrics].values
         x = np.expand_dims(np.reshape(x, (-1)), axis=0)
         x = xsc.transform(x)
