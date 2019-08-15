@@ -46,7 +46,7 @@ def parse_args():
     return args
 
 
-def convert(file,cols,metrics,deps=15):
+def convert(file,cols,metrics,deps=15,train=True):
     data = pd.read_csv(file, sep=' ',index_col=False, header=None,names=cols)
     data = data.drop(cols[-3:], axis=1)
     data = data.fillna(0)
@@ -58,12 +58,13 @@ def convert(file,cols,metrics,deps=15):
     y = []
     for k,v in data.groupby(['no']):
         v = v.reset_index(drop=True)
-        for i in range(0,v.shape[0]-deps,int(deps/2)):
-            row = v.loc[i:i+deps,metrics].values
-            row = np.reshape(row,(-1))
-            cycle = cycles[k]-v.loc[i+deps-1,'cycle']
-            x.append(row)
-            y.append(cycle)
+        if train:
+            for i in range(0,v.shape[0]-deps,int(deps/2)):
+                row = v.loc[i:i+deps,metrics].values
+                row = np.reshape(row,(-1))
+                cycle = cycles[k]-v.loc[i+deps-1,'cycle']
+                x.append(row)
+                y.append(cycle)
 
         row = v.loc[v.shape[0]-deps-1:,metrics].values
         row = np.reshape(row,(-1))
@@ -92,7 +93,7 @@ def main():
     for f in glob.glob(os.path.join(args.data,'test_FD*.txt')):
         name = os.path.basename(f)
         name = name.rstrip('.txt')
-        x,_ = convert(f,cols,metrics,args.deps)
+        x,_ = convert(f,cols,metrics,args.deps,train=False)
         data = pd.read_csv(f.replace('test_','RUL_'), sep=' ',index_col=False, header=None)
         y = data[0].values.astype(np.float32)
         np.savez(os.path.join(args.dst,'eval',name),x=x,y=y)

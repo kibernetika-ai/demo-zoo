@@ -61,6 +61,7 @@ def parse_args():
 
 def main():
     args = parse_args()
+    os.mkdir(args.dst)
     update_task_info({'iteration':args.iterations,'exp':args.exp,'test_split':0.25})
     npzfile = np.load(os.path.join(args.data,'train','train_'+args.exp+'.npz'))
     x = npzfile['x']
