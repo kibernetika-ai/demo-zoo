@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 import numpy as np
-from mlboard import update_task_info, catalog_ref
+from mlboard import mlboard,update_task_info, catalog_ref
 
 
 def parse_args():
@@ -68,7 +68,7 @@ def parse_args():
 def main():
     args = parse_args()
     os.mkdir(args.dst)
-    update_task_info({'iteration':args.iterations,'exp':args.exp,'test_split':0.25})
+    update_task_info({'iteration':args.iterations,'exp':args.exp,'test_split':0.25,'learning_rate':args.learning_rate})
     npzfile = np.load(os.path.join(args.data,'train','train_'+args.exp+'.npz'))
     x = npzfile['x']
     y = npzfile['y']
