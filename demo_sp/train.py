@@ -39,6 +39,12 @@ def parse_args():
         default='1.0.'+os.environ.get('BUILD_ID', '1'),
         help='Model version',
     )
+    parser.add_argument(
+        '--learning_rate',
+        type=float,
+        default=0.05,
+        help='Learning rate',
+    )
 
     parser.add_argument(
         '--exp',
@@ -80,7 +86,7 @@ def main():
         'boosting_type': 'gbdt',
         'objective': 'regression',
         'metric': {'mae'},
-        'learning_rate': 0.05,
+        'learning_rate': args.learning_rate,
         'verbose': 1}
     gbm = lgb.train(params,d_train,num_boost_round=args.iterations,valid_sets=d_eval,early_stopping_rounds=5)
     gbm.save_model(os.path.join(args.dst,'model.data'))
