@@ -86,12 +86,12 @@ def main():
     gbm.save_model(os.path.join(args.dst,'model.data'))
     joblib.dump(xsc, os.path.join(args.dst,'xscaler.pkl'))
     joblib.dump(ysc, os.path.join(args.dst,'yscaler.pkl'))
-    npzfile = np.load(os.path.join(args.data,'eval','test'+args.exp+'.npz'))
+    npzfile = np.load(os.path.join(args.data,'eval','test_'+args.exp+'.npz'))
     x = npzfile['x']
     y = npzfile['y']
     x_eval = xsc.transform(x)
     y_pred=gbm.predict(x_eval)
-    y_pred = ysc.inverse_transform(y_pred)
+    y_pred = np.reshape(ysc.inverse_transform(np.reshape(y_pred,(-1,1))),-1)
     mae = mean_absolute_error(y_pred,y)
     update_task_info({'eval_mae':mae})
 
