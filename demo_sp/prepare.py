@@ -47,28 +47,28 @@ def parse_args():
 
 
 def convert(file,cols,metrics,deps=15,train=True):
-    data = pd.read_csv(file, sep=' ',index_col=False, header=None,names=cols)
+    data = pd.read_csv(file, sep=' ', index_col=False, header=None, names=cols)
     data = data.drop(cols[-3:], axis=1)
     data = data.fillna(0)
-    cycles={}
-    for k,v in data.groupby(['no']):
-        cycle = v.iloc[-1,1]
-        cycles[k]=cycle
+    cycles = {}
+    for k, v in data.groupby(['no']):
+        cycle = v.iloc[-1, 1]
+        cycles[k] = cycle
     x = []
     y = []
-    for k,v in data.groupby(['no']):
+    for k, v in data.groupby(['no']):
         v = v.reset_index(drop=True)
         if train:
-            for i in range(0,v.shape[0]-deps,int(deps/2)):
-                row = v.loc[i:i+deps,metrics].values
-                row = np.reshape(row,(-1))
-                cycle = cycles[k]-v.loc[i+deps-1,'cycle']
+            for i in range(0, v.shape[0] - deps, int(deps / 2)):
+                row = v.loc[i:i + deps, metrics].values
+                row = np.reshape(row, (-1))
+                cycle = cycles[k] - v.loc[i + deps - 1, 'cycle']
                 x.append(row)
                 y.append(cycle)
 
-        row = v.loc[v.shape[0]-deps-1:,metrics].values
-        row = np.reshape(row,(-1))
-        cycle = cycles[k]-v.loc[v.shape[0]-1,'cycle']
+        row = v.loc[v.shape[0] - deps - 1:, metrics].values
+        row = np.reshape(row, (-1))
+        cycle = cycles[k] - v.loc[v.shape[0] - 1, 'cycle']
         x.append(row)
         y.append(cycle)
 
