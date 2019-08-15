@@ -10,18 +10,20 @@ import lightgbm as lgb
 LOG = logging.getLogger(__name__)
 
 PARAMS = {
-    'deps': 15
+    'deps': 15,
+    'model': './model',
 }
-model_path = os.environ.get('MODEL_DIR', './model')
+model_path = None
 xsc = None
 ysc = None
 gbm = None
 
 
 def init_hook(**kwargs):
-    global PARAMS, xsc, ysc, gbm
+    global PARAMS, xsc, ysc, gbm, model_path
     PARAMS.update(kwargs)
     PARAMS['deps'] = int(PARAMS['deps'])
+    model_path = PARAMS['model']
     xsc = joblib.load(os.path.join(model_path, 'xscaler.pkl'))
     ysc = joblib.load(os.path.join(model_path, 'yscaler.pkl'))
     gbm = lgb.Booster(model_file='model.data')
