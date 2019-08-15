@@ -26,7 +26,7 @@ def init_hook(**kwargs):
     model_path = PARAMS['model']
     xsc = joblib.load(os.path.join(model_path, 'xscaler.pkl'))
     ysc = joblib.load(os.path.join(model_path, 'yscaler.pkl'))
-    gbm = lgb.Booster(model_file='model.data')
+    gbm = lgb.Booster(model_file=os.path.join(model_path, 'model.data'))
     LOG.info('init: {}'.format(kwargs))
 
 
