@@ -9,6 +9,9 @@ from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from mlboard import mlboard,update_task_info, catalog_ref
+import matplotlib.pyplot as plt
+import io
+import base64
 
 
 def parse_args():
@@ -99,11 +102,22 @@ def main():
     y_pred=gbm.predict(x_eval)
     y_pred = np.reshape(ysc.inverse_transform(np.reshape(y_pred,(-1,1))),-1)
     mae = mean_absolute_error(y_pred,y)
+    z = np.abs(y_pred-y)
+    plt.title('Absolute Error Distribution')
+    plt.hist(z,20)
+    plt.ylabel('Abs Error')
+    plt.xlabel('Count')
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    rpt = '<html><img src="data:image/png;base64,{}"/></html>'.format(base64.b64encode(buf.getvalue()).decode())
+    update_task_info({'#documents.report.html':rpt})
     logging.info('Final MAE: {}'.format(int(mae)))
     update_task_info({'mae':mae})
     version = args.version+'-'+args.exp
     mlboard.model_upload(args.model,version, args.dst)
     update_task_info({'model_reference': catalog_ref(args.model, 'mlmodel', version)})
+
 
 if __name__ == '__main__':
     main()
