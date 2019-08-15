@@ -4,7 +4,7 @@ import logging
 import pandas as pd
 import glob
 import numpy as np
-from mlboard import mlboard, update_task_info, catalog_ref
+from mlboard import dataset_upload, update_task_info, catalog_ref
 
 
 def parse_args():
@@ -96,7 +96,7 @@ def main():
         data = pd.read_csv(f.replace('test_','RUL_'), sep=' ',index_col=False, header=None)
         y = data[0].values.astype(np.float32)
         np.savez(os.path.join(args.dst,'eval',name),x=x,y=y)
-    mlboard.dataset_upload(args.dataset,args.version, args.dst)
+    dataset_upload(args.dataset,args.version, args.dst)
     update_task_info({'data_reference': catalog_ref(args.dataset, 'dataset', args.version)})
 
 if __name__ == '__main__':

@@ -31,3 +31,25 @@ def update_task_info(data):
 def catalog_ref(name, ctype, version):
     return '#/{}/catalog/{}/{}/versions/{}'. \
         format(os.environ.get('WORKSPACE_NAME'), ctype, name, version)
+
+
+
+def dataset_upload(self, model_name, version, path,
+                 workspace=None, auto_create=True):
+    if not workspace:
+        if not self.ctx.workspace:
+            workspace = os.environ.get('WORKSPACE_NAME')
+        else:
+            workspace = self.ctx.workspace
+
+        if not workspace:
+            raise RuntimeError('workspace required')
+
+    mlboard.datasets.push(
+        workspace,
+        model_name,
+        version,
+        path,
+        type='dataset',
+        create=auto_create,
+    )
