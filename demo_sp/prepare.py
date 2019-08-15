@@ -96,7 +96,7 @@ def main():
         data = pd.read_csv(f.replace('test_','RUL_'), sep=' ',index_col=False, header=None)
         y = data[0].values.astype(np.float32)
         np.savez(os.path.join(args.dst,'eval',name),x=x,y=y)
-    mlboard.model_upload(args.dataset,args.version, args.dst)
+    mlboard.dataset_upload(args.dataset,args.version, args.dst)
     update_task_info({'model_reference': catalog_ref(args.dataset, 'dataset', args.version)})
 
 if __name__ == '__main__':
