@@ -70,8 +70,8 @@ def main():
     x_train = xsc.fit_transform(x_train)
     x_eval = xsc.transform(x_eval)
     ysc = StandardScaler()
-    y_train = ysc.fit_transform(y_train)
-    y_eval = ysc.transform(y_eval)
+    y_train = np.reshape(ysc.fit_transform(np.reshape(y_train,(-1,1))),-1)
+    y_eval =  np.reshape(ysc.fit_transform(np.reshape(y_eval,(-1,1))),-1)
     d_train = lgb.Dataset(x_train, label=y_train)
     d_eval = lgb.Dataset(x_eval, label=y_eval, reference=d_train)
     params = {
