@@ -93,7 +93,7 @@ def main():
     y_pred=gbm.predict(x_eval)
     y_pred = np.reshape(ysc.inverse_transform(np.reshape(y_pred,(-1,1))),-1)
     mae = mean_absolute_error(y_pred,y)
-    update_task_info({'eval_mae':mae})
+    update_task_info({'mae':mae})
     version = args.version+'-'+args.exp
     mlboard.model_upload(args.model,version, args.dst)
     update_task_info({'model_reference': catalog_ref(args.model, 'mlmodel', version)})
