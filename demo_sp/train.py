@@ -8,7 +8,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.externals import joblib
 from sklearn.preprocessing import StandardScaler
 import numpy as np
-from mlboard import dataset_upload, update_task_info, catalog_ref
+from mlboard import update_task_info, catalog_ref
 
 
 def parse_args():
@@ -94,6 +94,9 @@ def main():
     y_pred = np.reshape(ysc.inverse_transform(np.reshape(y_pred,(-1,1))),-1)
     mae = mean_absolute_error(y_pred,y)
     update_task_info({'eval_mae':mae})
+    version = args.version+'-'+args.exp
+    mlboard.model_upload(args.model,version, args.dst)
+    update_task_info({'model_reference': catalog_ref(args.model, 'mlmodel', version)})
 
 if __name__ == '__main__':
     main()
