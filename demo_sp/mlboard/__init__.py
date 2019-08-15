@@ -34,16 +34,10 @@ def catalog_ref(name, ctype, version):
 
 
 
-def dataset_upload(self, model_name, version, path,
-                 workspace=None, auto_create=True):
+def dataset_upload(model_name, version, path,auto_create=True):
+    workspace = os.environ.get('WORKSPACE_NAME')
     if not workspace:
-        if not self.ctx.workspace:
-            workspace = os.environ.get('WORKSPACE_NAME')
-        else:
-            workspace = self.ctx.workspace
-
-        if not workspace:
-            raise RuntimeError('workspace required')
+        raise RuntimeError('workspace required')
 
     mlboard.datasets.push(
         workspace,
