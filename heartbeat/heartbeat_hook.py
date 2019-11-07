@@ -19,10 +19,10 @@ def process(inputs, ctx, **kwargs):
     if x.shape[1]>187:
         x = x[:, :187].astype(np.float32)
     x = np.expand_dims(x[0:1,:], 2)
-    result = ctx.drivers[0].predict({'input_1':x})
+    result = ctx.drivers[0].predict({'input_1':x})['softmax']
     logging.info(result)
     logging.info(result.shape)
-    result = int(result['softmax'].argmax())
+    result = int(result.argmax())
     logging.info(result)
     plt.figure(figsize=(20, 12))
     v = np.arange(0, 187) * 8 / 1000
