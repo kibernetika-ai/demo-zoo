@@ -13,7 +13,8 @@ def init_hook(**kwargs):
 
 def process(inputs, ctx, **kwargs):
     data = inputs.get('data')[0]
-    df = pd.read_csv(io.BytesIO(data)[0], header=None)
+    data = io.BytesIO(data)
+    df = pd.read_csv(data, header=None)
     x = df.values
     if x.shape[1]>187:
         x = x[:, :187].astype(np.float32)
