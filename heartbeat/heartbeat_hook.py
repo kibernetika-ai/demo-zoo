@@ -20,7 +20,10 @@ def process(inputs, ctx, **kwargs):
         x = x[:, :187].astype(np.float32)
     x = np.expand_dims(x[0:1,:], 2)
     result = ctx.drivers[0].predict({'input_1':x})
-    result = int(result['softmax'].argmax(axis=1)[0])
+    logging.info(result)
+    logging.info(result.shape)
+    result = int(result['softmax'].argmax())
+    logging.info(result)
     plt.figure(figsize=(20, 12))
     v = np.arange(0, 187) * 8 / 1000
     plt.plot(v, x[0,:,0])
