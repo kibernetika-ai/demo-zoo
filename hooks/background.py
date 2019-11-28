@@ -42,7 +42,7 @@ def apply_style(img, style):
     outputs = predict_grpc({'image': img.astype(np.uint8),
                             'style': style},
                            'unistyles:9000')
-    return outputs['output']
+    return outputs['output'][:,:,::-1]
 
 
 def process(inputs, ct_x, **kwargs):
