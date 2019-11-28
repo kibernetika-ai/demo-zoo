@@ -116,6 +116,7 @@ def init_hook(**params):
 
 
 def process(inputs, ctx, **kwargs):
+    logging.info('Inputs: {}'.format(inputs))
     img, is_video = helpers.load_image(inputs, 'image', rgb=False)
     style_name = helpers.get_param(inputs, 'style', None)
     if style_name is not None:
