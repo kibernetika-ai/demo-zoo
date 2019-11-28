@@ -39,7 +39,7 @@ def limit(v, l, r, d):
 
 
 def apply_style(img, style):
-    outputs = predict_grpc({'image': np.expand_dims(img, 0),
+    outputs = predict_grpc({'image': img.astype(np.uint8),
                             'style': style},
                            'unistyles:9000')
     return outputs['output']
