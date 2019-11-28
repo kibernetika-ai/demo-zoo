@@ -152,3 +152,4 @@ def pytorch_image_numpy(tensor, cuda=False):
         img = tensor.clone().clamp(0, 255).numpy()
     img = img.transpose(1, 2, 0).astype('uint8')
     return img
+
