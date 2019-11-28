@@ -104,8 +104,9 @@ class CartoonStyles:
         if self.cuda:
             image = image.cuda()
         image = model(image)[0]
+        image = image.data.cpu().float().numpy()
         image = (image * 0.5 + 0.5) * 255
-        image = pytorch_image_numpy(image,self.cuda)
+        image = np.transpose(image, (1, 2, 0)).astype(np.uint8)
         image = cv2.resize(image, (w, h))
         return image
 
