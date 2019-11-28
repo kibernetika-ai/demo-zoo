@@ -7,7 +7,7 @@ import glob
 import os
 import cv2
 import mstyles.Transformer as StylesTrans
-import hooks.cartoon.Transformer as CartoonTrans
+import cartoon.Transformer as CartoonTrans
 from torch.autograd import Variable
 from ml_serving.utils import helpers
 
