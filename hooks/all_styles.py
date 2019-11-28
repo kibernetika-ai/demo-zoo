@@ -6,7 +6,7 @@ import torch
 import glob
 import os
 import cv2
-import hooks.mstyles.Transformer as StylesTrans
+import mstyles.Transformer as StylesTrans
 from torch.autograd import Variable
 from ml_serving.utils import helpers
 
