@@ -107,7 +107,7 @@ class CartoonStyles:
         image = image.data.cpu().float().numpy()
         image = (image * 0.5 + 0.5) * 255
         image = np.transpose(image, (1, 2, 0)).astype(np.uint8)
-        image = cv2.resize(image, (w, h))
+        image = cv2.resize(image[:,:,::-1], (w, h))
         return image
 
 def init_hook(**params):
