@@ -7,6 +7,7 @@ import glob
 import os
 import cv2
 import mstyles.Transformer as StylesTrans
+import hooks.cartoon.Transformer as CartoonTrans
 from torch.autograd import Variable
 from ml_serving.utils import helpers
 
@@ -70,9 +71,47 @@ class ArtisticStyles:
         return image
 
 
+class CartoonStyles:
+    def __init__(self, **params):
+        self.max_size = int(params.get('max_size', 1024))
+        self.cuda = torch.cuda.is_available()
+        model_path = params.get('cartoon_model_path', None)
+        if model_path is None:
+            self.models = None
+            return
+        self.models = {}
+        for m in glob.glob(model_path + '/*.pth'):
+            f = os.path.basename(m)
+            LOG.info('Loading cartoon model {} {}'.format(f, m))
+            model = CartoonTrans.Transformer()
+            model.load_state_dict(torch.load(m))
+            model.eval()
+            if self.cuda:
+                model.cuda()
+            else:
+                model.float()
+            self.models[f.split('_')[0]] = model
+
+    def process(self, image, style_name, inputs):
+        if self.models is None:
+            return image
+        w = image.shape[1]
+        h = image.shape[0]
+        model = self.models[style_name]
+        image = pytorch_load_image(image, size=self.max_size, keep_asp=True).unsqueeze(0)
+        image = -1 + 2 * image / 255.0
+        image = Variable(image, volatile=True)
+        if self.cuda:
+            image = image.cuda()
+        image = model(image)[0]
+        image = (image * 0.5 + 0.5) * 255
+        image = pytorch_image_numpy(image,self.cuda)
+        image = cv2.resize(image, (w, h))
+        return image
+
 def init_hook(**params):
     LOG.info('Loaded. {}'.format(params))
-    return {'artistic': ArtisticStyles(**params)}
+    return {'artistic': ArtisticStyles(**params),'cartoon': CartoonStyles(**params)}
 
 
 def process(inputs, ctx, **kwargs):
