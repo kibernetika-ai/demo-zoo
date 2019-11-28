@@ -94,13 +94,13 @@ def process(inputs, ctx, **kwargs):
 def pytorch_load_image(img, size=None, scale=None, keep_asp=False):
     if size is not None:
         if keep_asp:
-            size2 = int(size * 1.0 / img.size[0] * img.size[1])
+            size2 = int(size * 1.0 / img.shape[1] * img.shape[0])
             img = cv2.resize(img, (size, size2))
         else:
             img = cv2.resize(img, (size, size))
 
     elif scale is not None:
-        img = cv2.resize(img, (int(img.size[0] / scale), int(img.size[1] / scale)))
+        img = cv2.resize(img, (int(img.shape[1] / scale), int(img.shape[0] / scale)))
     img = img.transpose(2, 0, 1)
     img = torch.from_numpy(img).float()
     return img
