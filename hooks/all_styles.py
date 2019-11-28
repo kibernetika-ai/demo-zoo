@@ -54,8 +54,8 @@ class ArtisticStyles:
     def process(self, image, style_name, inputs):
         if self.model is None:
             return image
-        w = image.size[0]
-        h = image.size[1]
+        w = image.shape[1]
+        h = image.shape[0]
         image = pytorch_load_image(image, size=self.max_size, keep_asp=True).unsqueeze(0)
         if self.cuda:
             image = image.cuda()
@@ -77,7 +77,6 @@ def init_hook(**params):
 
 def process(inputs, ctx, **kwargs):
     img, is_video = helpers.load_image(inputs, 'image', rgb=False)
-    LOG.info('GOT {}'.format(img))
     style_name = helpers.get_param(inputs, 'style', None)
     if style_name is not None:
         p = style_name.split('_')
