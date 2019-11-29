@@ -189,7 +189,9 @@ def process(inputs, ct_x, **kwargs):
         mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]))
     mask = cv2.GaussianBlur(mask, (21, 21), 11)
     if effect == 'Remove background':
-        background, _ = load_image(inputs, 'background_img')
+        background = None
+        if 'background_img' in inputs:
+            background, _ = load_image(inputs, 'background_img')
         if background is None:
             background = backgrounds.get(get_param(inputs, 'background', 'None'))
         add_style = get_param(inputs, 'style', '')
