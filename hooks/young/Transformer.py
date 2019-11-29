@@ -130,9 +130,10 @@ class YoungModel:
         logging.info('Apply young {}'.format(self._style_size))
         img = img[box[1]:box[3], box[0]:box[2], :]
         i_img = scale_to_inference_image(img, self._style_size)
-        logging.info('Apply serv')
+        logging.info('Apply serv {}'.format(i_img.shape))
         outputs = self._style_driver.predict(
             {self._style_input_name: np.expand_dims(norm_to_inference(i_img), axis=0)})
+        logging.info('Apply serv ok {}'.format(outputs))
         output = list(outputs.values())[0].squeeze()
         output = inverse_transform(output)
         output = scale(output)
