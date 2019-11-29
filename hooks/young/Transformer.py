@@ -250,7 +250,7 @@ class Pipe:
                     logging.info('step6')
                     out = image[ymin:ymax, xmin:xmax, :]
                     center = (wleft + output.shape[1] // 2, wup + output.shape[0] // 2)
-                    logging.info('step7')
+                    logging.info('step7: {}/{}'.format(center,output.shape))
                     out = cv2.seamlessClone(output, out, np.ones_like(output) * alpha, center, cv2.NORMAL_CLONE)
                     logging.info('step8')
                     image[ymin:ymax, xmin:xmax, :] = out
