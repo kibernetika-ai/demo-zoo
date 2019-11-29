@@ -11,9 +11,12 @@ LOG = logging.getLogger(__name__)
 
 backgrounds = {'None': None}
 
+style_srv = 'styles:9000'
 
 def init_hook(**params):
     backgrounds_dir = params.get('backgrounds', None)
+    global style_srv
+    style_srv = params.get('style_srv', 'styles:9000')
     global backgrounds
     if backgrounds_dir is not None:
         for f in glob.glob(backgrounds_dir + '/*.jpg'):
@@ -41,7 +44,7 @@ def limit(v, l, r, d):
 def apply_style(img, style):
     outputs = predict_grpc({'image': img.astype(np.uint8),
                             'style': style},
-                           'unistyles:9000')
+                           style_srv)
     return outputs['output'][:,:,::-1]
 
 
