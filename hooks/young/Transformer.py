@@ -137,6 +137,7 @@ class YoungModel:
         output = list(outputs.values())[0].squeeze()
         output = inverse_transform(output)
         output = scale(output)
+        logging.info('Return')
         return i_img, output, box
 
 
