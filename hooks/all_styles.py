@@ -10,6 +10,7 @@ import mstyles.Transformer as StylesTrans
 import cartoon.Transformer as CartoonTrans
 from torch.autograd import Variable
 from ml_serving.utils import helpers
+from hooks.young.Transformer import Pipe as YoungHook
 
 LOG = logging.getLogger(__name__)
 
@@ -107,18 +108,28 @@ class CartoonStyles:
         image = image.data.cpu().float().numpy()
         image = (image * 0.5 + 0.5) * 255
         image = np.transpose(image, (1, 2, 0)).astype(np.uint8)
-        image = cv2.resize(image[:,:,::-1], (w, h))
+        image = cv2.resize(image[:, :, ::-1], (w, h))
         return image
+
+
+class YoungModel:
+    def __init__(self, **params):
+        self.model = YoungHook(**params)
+
+    def process(self, inputs, ctx, **kwargs):
+        return self.model.process(inputs, ctx, **kwargs)
+
 
 def init_hook(**params):
     LOG.info('Loaded. {}'.format(params))
-    return {'artistic': ArtisticStyles(**params),'cartoon': CartoonStyles(**params)}
+    return {'artistic': ArtisticStyles(**params), 'cartoon': CartoonStyles(**params), 'young': YoungModel()}
 
 
 def process(inputs, ctx, **kwargs):
-    logging.info('Inputs: {}'.format(inputs))
-    img, is_video = helpers.load_image(inputs, 'image', rgb=False)
     style_name = helpers.get_param(inputs, 'style', None)
+    if style_name == 'young':
+        return ctx.global_ctx[style_name].process(inputs, ctx, **kwargs)
+    img, is_video = helpers.load_image(inputs, 'image', rgb=False)
     if style_name is not None:
         p = style_name.split('_')
         model = 'artistic'
@@ -154,4 +165,3 @@ def pytorch_image_numpy(tensor, cuda=False):
         img = tensor.clone().clamp(0, 255).numpy()
     img = img.transpose(1, 2, 0).astype('uint8')
     return img
-
