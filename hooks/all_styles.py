@@ -10,7 +10,7 @@ import mstyles.Transformer as StylesTrans
 import cartoon.Transformer as CartoonTrans
 from torch.autograd import Variable
 from ml_serving.utils import helpers
-from hooks.young.Transformer import Pipe as YoungHook
+from young.Transformer import Pipe as YoungHook
 
 LOG = logging.getLogger(__name__)
 
@@ -114,6 +114,7 @@ class CartoonStyles:
 
 class YoungModel:
     def __init__(self, **params):
+        #if params.get()
         self.model = YoungHook(**params)
 
     def process(self, inputs, ctx, **kwargs):
