@@ -210,6 +210,7 @@ class Pipe:
             y1 = int(original.shape[0] / 2) + y0
             original = original[y0:y1, :, :]
         boxes = self.face_detector.bboxes(original)
+        logging.info('Detect: {}'.format(boxes))
         boxes.sort(key=lambda box: abs((box[3] - box[1]) * (box[2] - box[0])), reverse=True)
 
         box = None
@@ -219,6 +220,7 @@ class Pipe:
                 box = None
         image = original.copy()
         if box is not None and self.style_model is not None:
+            logging.info('aplly style: {}'.format(box))
             inference_img, output, box = self.style_model.process(ctx, image, box)
             alpha = np.clip(alpha, 1, 255)
             if srt_2_bool(helpers.get_param(inputs, 'color_correction', self._color_correction)):
@@ -248,13 +250,13 @@ class Pipe:
                 if srt_2_bool(helpers.get_param(inputs, "draw_box", self._draw_box)):
                     image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2, 8)
 
-        output_view = helpers.get_param(inputs, 'output_view', self._output_view)
         result = {}
         image = self.maybe_mirror(image)
         if output_view == 'horizontal' or output_view == 'h' or output_view == 'fh':
             image = np.hstack((self.maybe_mirror(original), image))
         elif output_view == 'vertical' or output_view == 'v':
             image = np.vstack((self.maybe_mirror(original), image))
+        logging.info('Overlays')
         image = self.add_overlay(image)
         if not is_video:
             image = image[:, :, ::-1]
