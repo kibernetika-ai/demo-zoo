@@ -115,7 +115,7 @@ class CartoonStyles:
 class YoungModel:
     def __init__(self, **params):
         #if params.get()
-        self.model = YoungHook(**params)
+        self.model = YoungHook({},**params)
 
     def process(self, inputs, ctx, **kwargs):
         return self.model.process(inputs, ctx, **kwargs)
