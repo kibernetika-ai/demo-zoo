@@ -126,8 +126,10 @@ class YoungModel:
             {self._style_input_name: np.zeros((1, self._style_size, self._style_size, 3), np.float32)})
 
     def process(self, ctx, img, box):
+        logging.info('Apply young {}'.format(self._style_size))
         img = img[box[1]:box[3], box[0]:box[2], :]
         i_img = scale_to_inference_image(img, self._style_size)
+        logging.info('Apply serv')
         outputs = self._style_driver.predict(
             {self._style_input_name: np.expand_dims(norm_to_inference(i_img), axis=0)})
         output = list(outputs.values())[0].squeeze()
@@ -156,7 +158,7 @@ class Pipe:
         self._output_view = params.get('output_view', 's')
         self._transfer_mode = params.get('transfer_mode', 'box_margin')
         self._color_correction = srt_2_bool(params.get('color_correction', 'True'))
-        self.style_model = models.get('style_model')
+        self.style_model = models.get('style_model',None)
         if self.style_model is None:
             self.style_model = YoungModel(self._style_size, params.get('beauty_model_path', None))
         self._mask_orig = np.zeros((self._style_size, self._style_size, 3), np.float32)
