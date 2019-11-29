@@ -123,7 +123,7 @@ class YoungModel:
 
 def init_hook(**params):
     LOG.info('Loaded. {}'.format(params))
-    return {'artistic': ArtisticStyles(**params), 'cartoon': CartoonStyles(**params), 'young': YoungModel()}
+    return {'artistic': ArtisticStyles(**params), 'cartoon': CartoonStyles(**params), 'young': YoungModel(**params)}
 
 
 def process(inputs, ctx, **kwargs):
