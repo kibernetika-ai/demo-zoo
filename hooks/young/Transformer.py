@@ -256,8 +256,8 @@ class Pipe:
         elif output_view == 'vertical' or output_view == 'v':
             image = np.vstack((self.maybe_mirror(original), image))
         image = self.add_overlay(image)
+        image = image[:, :, ::-1]
         if not is_video:
-            image = image[:, :, ::-1]
             image_bytes = cv2.imencode('.jpg', image)[1].tostring()
         else:
             image_bytes = image
