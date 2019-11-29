@@ -197,7 +197,7 @@ class Pipe:
 
     def process(self, inputs, ctx, **kwargs):
         alpha = int(helpers.get_param(inputs, 'alpha', self._alpha))
-        original, is_video = helpers.load_image(inputs, 'input')
+        original, is_video = helpers.load_image(inputs, 'image')
         if self._portret:
             original = np.transpose(original,(1,0,2))
         output_view = helpers.get_param(inputs, 'output_view', self._output_view)
