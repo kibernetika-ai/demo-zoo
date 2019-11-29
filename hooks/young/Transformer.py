@@ -122,8 +122,9 @@ class YoungModel:
         self._style_driver.load_model(model_path)
         self._style_size = style_size
         self._style_input_name = list(self._style_driver.inputs.keys())[0]
-        self._style_driver.predict(
+        res = self._style_driver.predict(
             {self._style_input_name: np.zeros((1, self._style_size, self._style_size, 3), np.float32)})
+        logging.info('Init predict serv: {}'.format(res))
 
     def process(self, ctx, img, box):
         logging.info('Apply young {}'.format(self._style_size))
