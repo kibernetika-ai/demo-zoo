@@ -227,7 +227,9 @@ class Pipe:
         if box is not None and self.style_model is not None:
             logging.info('aplly style: {}'.format(box))
             inference_img, output, box = self.style_model.process(ctx, image, box)
+            logging.info('step1')
             alpha = np.clip(alpha, 1, 255)
+            logging.info('step2')
             if srt_2_bool(helpers.get_param(inputs, 'color_correction', self._color_correction)):
                 output = color_tranfer(output, inference_img)
             if helpers.get_param(inputs, 'transfer_mode', self._transfer_mode) == 'direct':
@@ -235,7 +237,9 @@ class Pipe:
                 output = cv2.resize(output, (box[2] - box[0], box[3] - box[1]), interpolation=cv2.INTER_LINEAR)
                 image[box[1]:box[3], box[0]:box[2], :] = output
             else:
+                logging.info('step3')
                 output = cv2.resize(np.array(output), (box[2] - box[0], box[3] - box[1]), interpolation=cv2.INTER_AREA)
+                logging.info('step4')
                 if helpers.get_param(inputs, 'transfer_mode', self._transfer_mode) == 'box_margin':
                     xmin = max(0, box[0] - 50)
                     wleft = box[0] - xmin
@@ -243,10 +247,14 @@ class Pipe:
                     wup = box[1] - ymin
                     xmax = min(image.shape[1], box[2] + 50)
                     ymax = min(image.shape[0], box[3] + 50)
+                    logging.info('step6')
                     out = image[ymin:ymax, xmin:xmax, :]
                     center = (wleft + output.shape[1] // 2, wup + output.shape[0] // 2)
+                    logging.info('step7')
                     out = cv2.seamlessClone(output, out, np.ones_like(output) * alpha, center, cv2.NORMAL_CLONE)
+                    logging.info('step8')
                     image[ymin:ymax, xmin:xmax, :] = out
+                    logging.info('step9')
                 else:
                     center = (box[0] + output.shape[1] // 2, box[1] + output.shape[0] // 2)
                     if not (center[0] >= output.shape[1] or box[1] + output.shape[0] // 2 >= output.shape[0]):
@@ -256,7 +264,9 @@ class Pipe:
                     image = cv2.rectangle(image, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 2, 8)
 
         result = {}
+        logging.info('step10')
         image = self.maybe_mirror(image)
+        logging.info('step11')
         if output_view == 'horizontal' or output_view == 'h' or output_view == 'fh':
             image = np.hstack((self.maybe_mirror(original), image))
         elif output_view == 'vertical' or output_view == 'v':
