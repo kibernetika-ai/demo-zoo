@@ -156,7 +156,7 @@ class Pipe:
         self._output_view = params.get('output_view', 's')
         self._transfer_mode = params.get('transfer_mode', 'box_margin')
         self._color_correction = srt_2_bool(params.get('color_correction', 'True'))
-        self.style_model = models.get('style_model',None)
+        self.style_model = models.get('style_model', None)
         if self.style_model is None:
             self.style_model = YoungModel(self._style_size, params.get('beauty_model_path', None))
         self._mask_orig = np.zeros((self._style_size, self._style_size, 3), np.float32)
@@ -199,7 +199,7 @@ class Pipe:
         alpha = int(helpers.get_param(inputs, 'alpha', self._alpha))
         original, is_video = helpers.load_image(inputs, 'image')
         if self._portret:
-            original = np.transpose(original,(1,0,2))
+            original = np.transpose(original, (1, 0, 2))
         output_view = helpers.get_param(inputs, 'output_view', self._output_view)
         if output_view == 'horizontal' or output_view == 'h':
             x0 = int(original.shape[1] / 4)
@@ -238,9 +238,22 @@ class Pipe:
                     ymax = min(image.shape[0], box[3] + 50)
                     out = image[ymin:ymax, xmin:xmax, :]
                     center = (wleft + output.shape[1] // 2, wup + output.shape[0] // 2)
-                    logging.info('step7: {}/{}'.format(center,output.shape))
-                    out = cv2.seamlessClone(output, out, np.ones_like(output) * alpha, center, cv2.NORMAL_CLONE)
-                    image[ymin:ymax, xmin:xmax, :] = out
+                    samples = int(helpers.get_param(inputs, 'samples', 0))
+                    if samples > 1:
+                        results = {'s_0': cv2.imencode('.jpg', image)[1].tostring()}
+                        step_alpha = 255.0 / (samples - 1)
+                        for si in range(samples - 1):
+                            alpha = int(step_alpha * (si + 1))
+                            s_image = image.copy()
+                            out_copy = out.copy()
+                            out_copy = cv2.seamlessClone(output, out_copy, np.ones_like(output) * alpha, center,
+                                                         cv2.NORMAL_CLONE)
+                            s_image[ymin:ymax, xmin:xmax, :] = out_copy
+                            results[f's_{si + 1}'] = cv2.imencode('.jpg', s_image)[1].tostring()
+                        return results
+                    else:
+                        out = cv2.seamlessClone(output, out, np.ones_like(output) * alpha, center, cv2.NORMAL_CLONE)
+                        image[ymin:ymax, xmin:xmax, :] = out
                 else:
                     center = (box[0] + output.shape[1] // 2, box[1] + output.shape[0] // 2)
                     if not (center[0] >= output.shape[1] or box[1] + output.shape[0] // 2 >= output.shape[0]):
