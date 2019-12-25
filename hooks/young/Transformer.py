@@ -251,6 +251,7 @@ class Pipe:
                         step_alpha = 255.0 / (samples - 1)
                         for si in range(samples - 1):
                             alpha = int(step_alpha * (si + 1))
+                            alpha = 255
                             s_image = image.copy()
                             out_copy = out.copy()
                             LOG.info('Start clone: {}'.format(si+1))
