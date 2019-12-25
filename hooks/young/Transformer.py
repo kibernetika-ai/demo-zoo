@@ -239,6 +239,7 @@ class Pipe:
                     out = image[ymin:ymax, xmin:xmax, :]
                     center = (wleft + output.shape[1] // 2, wup + output.shape[0] // 2)
                     samples = int(helpers.get_param(inputs, 'samples', 0))
+                    LOG.info('Samples: {}'.format(samples))
                     if samples > 1:
                         results = {'s_0': cv2.imencode('.jpg', image)[1].tostring()}
                         step_alpha = 255.0 / (samples - 1)
