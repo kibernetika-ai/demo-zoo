@@ -248,6 +248,9 @@ class Pipe:
                             s_image = image.copy()
                             out_copy = out.copy()
                             LOG.info('Start clone: {}'.format(si+1))
+                            LOG.info('Center: {}'.format(center))
+                            LOG.info('output: {}'.format(output.shape))
+                            LOG.info('out_copy: {}'.format(out_copy.shape))
                             out_copy = cv2.seamlessClone(output, out_copy, np.ones_like(output) * alpha, center,
                                                          cv2.NORMAL_CLONE)
                             LOG.info('Stop clone: {}'.format(si + 1))
