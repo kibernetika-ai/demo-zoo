@@ -231,9 +231,9 @@ class Pipe:
                 output = cv2.resize(np.array(output), (box[2] - box[0], box[3] - box[1]), interpolation=cv2.INTER_AREA)
                 if helpers.get_param(inputs, 'transfer_mode', self._transfer_mode) == 'box_margin':
                     xmin = max(0, box[0] - 50)
-                    wleft = box[0] - xmin
+                    wleft = box[0] - xmin if xmin>0 else 0
                     ymin = max(0, box[1] - 50)
-                    wup = box[1] - ymin
+                    wup = box[1] - ymin if ymin>0 else 0
                     xmax = min(image.shape[1], box[2] + 50)
                     ymax = min(image.shape[0], box[3] + 50)
                     out = image[ymin:ymax, xmin:xmax, :]
