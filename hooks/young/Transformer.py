@@ -230,14 +230,18 @@ class Pipe:
             else:
                 output = cv2.resize(np.array(output), (box[2] - box[0], box[3] - box[1]), interpolation=cv2.INTER_AREA)
                 if helpers.get_param(inputs, 'transfer_mode', self._transfer_mode) == 'box_margin':
-                    xmin = max(0, box[0] - 50)
-                    wleft = box[0] - xmin if xmin>0 else 0
+                    #xmin = max(0, box[0] - 50)
+                    #wleft = box[0] - xmin if xmin>0 else 0
+                    xmin = box[0]
+                    wleft = 0
                     LOG.info('xmin: {},wleft: {},x={}'.format(xmin,wleft,box[0]))
-                    ymin = max(0, box[1] - 50)
-                    wup = box[1] - ymin if ymin>0 else 0
+                    #ymin = max(0, box[1] - 50)
+                    #wup = box[1] - ymin if ymin>0 else 0
+                    ymin = box[1]
+                    wup = 0
                     LOG.info('ymin: {},wup: {},y={}'.format(ymin, wup, box[1]))
-                    xmax = min(image.shape[1], box[2] + 50)
-                    ymax = min(image.shape[0], box[3] + 50)
+                    xmax = min(image.shape[1], box[2])
+                    ymax = min(image.shape[0], box[3])
                     out = image[ymin:ymax, xmin:xmax, :]
                     center = (wleft + output.shape[1] // 2, wup + output.shape[0] // 2)
                     samples = int(helpers.get_param(inputs, 'samples', 0))
