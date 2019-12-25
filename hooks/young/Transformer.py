@@ -232,8 +232,10 @@ class Pipe:
                 if helpers.get_param(inputs, 'transfer_mode', self._transfer_mode) == 'box_margin':
                     xmin = max(0, box[0] - 50)
                     wleft = box[0] - xmin if xmin>0 else 0
+                    LOG.info('xmin: {},wleft: {},x={}'.format(xmin,wleft,box[0]))
                     ymin = max(0, box[1] - 50)
                     wup = box[1] - ymin if ymin>0 else 0
+                    LOG.info('ymin: {},wup: {},y={}'.format(ymin, wup, box[1]))
                     xmax = min(image.shape[1], box[2] + 50)
                     ymax = min(image.shape[0], box[3] + 50)
                     out = image[ymin:ymax, xmin:xmax, :]
