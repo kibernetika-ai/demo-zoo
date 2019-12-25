@@ -230,39 +230,26 @@ class Pipe:
             else:
                 output = cv2.resize(np.array(output), (box[2] - box[0], box[3] - box[1]), interpolation=cv2.INTER_AREA)
                 if helpers.get_param(inputs, 'transfer_mode', self._transfer_mode) == 'box_margin':
-                    #xmin = max(0, box[0] - 50)
-                    #wleft = box[0] - xmin if xmin>0 else 0
-                    xmin = box[0]
-                    wleft = 0
-                    LOG.info('xmin: {},wleft: {},x={}'.format(xmin,wleft,box[0]))
-                    #ymin = max(0, box[1] - 50)
-                    #wup = box[1] - ymin if ymin>0 else 0
-                    ymin = box[1]
-                    wup = 0
-                    LOG.info('ymin: {},wup: {},y={}'.format(ymin, wup, box[1]))
+                    xmin = max(0, box[0] - 50)
+                    wleft = box[0] - xmin
+                    ymin = max(0, box[1] - 50)
+                    wup = box[1] - ymin
                     xmax = min(image.shape[1], box[2])
                     ymax = min(image.shape[0], box[3])
                     out = image[ymin:ymax, xmin:xmax, :]
                     center = (wleft + output.shape[1] // 2, wup + output.shape[0] // 2)
                     samples = int(helpers.get_param(inputs, 'samples', 0))
-                    LOG.info('Samples: {}'.format(samples))
                     if samples > 1:
                         results = {'s_0': cv2.imencode('.jpg', image)[1].tostring()}
                         step_alpha = 255.0 / (samples - 1)
                         for si in range(samples - 1):
                             alpha = int(step_alpha * (si + 1))
-                            alpha = 255
                             s_image = image.copy()
                             out_copy = out.copy()
-                            LOG.info('Start clone: {}'.format(si+1))
-                            LOG.info('Center: {}'.format(center))
-                            LOG.info('output: {}'.format(output[0:2,0:2,:]))
-                            LOG.info('out_copy: {}'.format(out_copy[0:2,0:2,:]))
                             out_copy = cv2.seamlessClone(output, out_copy, np.ones_like(output) * alpha, center,
                                                          cv2.NORMAL_CLONE)
-                            LOG.info('Stop clone: {}'.format(si + 1))
                             s_image[ymin:ymax, xmin:xmax, :] = out_copy
-                            results[f's_{si + 1}'] = cv2.imencode('.jpg', s_image)[1].tostring()
+                            results[f's_{si + 1}'] = cv2.imencode('.jpg', s_image[:,:,::-1])[1].tostring()
                         return results
                     else:
                         out = cv2.seamlessClone(output, out, np.ones_like(output) * alpha, center, cv2.NORMAL_CLONE)
