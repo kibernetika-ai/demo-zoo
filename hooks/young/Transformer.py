@@ -245,10 +245,10 @@ class Pipe:
                         for si in range(samples - 1):
                             alpha = int(step_alpha * (si + 1))
                             s_image = image.copy()
-                            out_copy = out.copy()
-                            out_copy = cv2.seamlessClone(output, out_copy, np.ones_like(output) * alpha, center,
+                            #out_copy = out.copy()
+                            out = cv2.seamlessClone(output, out, np.ones_like(output) * alpha, center,
                                                          cv2.NORMAL_CLONE)
-                            s_image[ymin:ymax, xmin:xmax, :] = out_copy
+                            s_image[ymin:ymax, xmin:xmax, :] = out
                             results[f's_{si + 1}'] = cv2.imencode('.jpg', s_image[:,:,::-1])[1].tostring()
                         return results
                     else:
