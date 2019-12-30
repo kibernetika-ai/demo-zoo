@@ -1,3 +1,7 @@
+#!/usr/bin/env bash
+
+cd /opt/styles
+
 STYLES_DIR=/opt/styles/models/21styles
 CARTOON_DIR=/opt/styles/models/cartoon
 FACEDETECT_DIR=/opt/styles/models/faces
