@@ -114,10 +114,19 @@ class CartoonStyles:
 
 class YoungModel:
     def __init__(self, **params):
-        #if params.get()
+        model_path = params.get('beauty_model_path', None)
+        if model_path is None:
+            self.model = None
+            return
         self.model = YoungHook({},**params)
 
     def process(self, inputs, ctx, **kwargs):
+        if self.model is None:
+            img, is_video = helpers.load_image(inputs, 'image', rgb=False)
+            img = img[:, :, ::-1]
+            if not is_video:
+                img = cv2.imencode('.jpg', img)[1].tostring()
+            return {'output': img}
         return self.model.process(inputs, ctx, **kwargs)
 
 
