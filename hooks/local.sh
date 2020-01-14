@@ -10,7 +10,7 @@ YOUNG_DIR=/opt/styles/models/young
 kuberlab-serving --driver null \
   --model-path null \
   --hooks all_styles.py \
-  --http_enable \
+  --http-enable \
   -o max_size=512 \
   -o style_model_path=$STYLES_DIR/21styles.model \
   -o styles_samples_path=$STYLES_DIR/21styles \
