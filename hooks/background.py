@@ -10,7 +10,7 @@ import os
 LOG = logging.getLogger(__name__)
 
 backgrounds = {'None': None}
-
+glob_background = None
 style_srv = 'styles:9000'
 
 def init_hook(**params):
@@ -24,6 +24,10 @@ def init_hook(**params):
             LOG.info('Load: {}'.format(name))
             img = cv2.imread(f)
             backgrounds[name] = img[:, :, ::-1]
+        back = params.get('background', None)
+        if back is not None:
+            global glob_background
+            glob_background = backgrounds.get(back,None)
 
     LOG.info('Loaded.')
 
@@ -193,7 +197,14 @@ def process(inputs, ct_x, **kwargs):
         if 'background_img' in inputs:
             background, _ = load_image(inputs, 'background_img')
         if background is None:
-            background = backgrounds.get(get_param(inputs, 'background', 'None'))
+            back_name = get_param(inputs, 'background',None)
+            if back_name is not None:
+                background = backgrounds.get(back_name)
+            else:
+                if glob_background is not None:
+                    background = glob_background
+                else:
+                    background = backgrounds.get('None')
         add_style = get_param(inputs, 'style', '')
         if len(add_style) > 0:
             image = apply_style(original_image, add_style).astype(np.float32)

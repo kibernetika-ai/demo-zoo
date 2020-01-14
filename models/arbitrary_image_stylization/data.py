@@ -114,6 +114,7 @@ def _aspect_preserving_resize(image, smallest_side):
     shape = tf.shape(image)
     height = shape[1]
     width = shape[2]
+
     new_height, new_width = _smallest_size_at_least(height, width, smallest_side)
     resized_image = tf.image.resize_bilinear(image, [new_height, new_width],
                                              align_corners=False)
