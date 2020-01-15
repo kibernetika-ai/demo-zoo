@@ -31,4 +31,5 @@ kuberlab-serving --driver null \
   -o output_view=s \
   -o transfer_mode=direct $SERVING_MODELS \
   --params=cloud_status=1 \
+  --status_name=output \
   --cloud_config=126b6f0a-076a-4a97-b62e-16782bca69de@https://dev.kibernetika.io/api/v0.2/workspace/expo-recall/serving/xavier/config/live
