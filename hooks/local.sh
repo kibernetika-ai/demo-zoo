@@ -31,4 +31,4 @@ kuberlab-serving --driver null \
   -o output_view=s \
   -o transfer_mode=direct $SERVING_MODELS \
   --status-name=output \
-  --cloud_config="36cbba05-b29c-43c2-96fe-54f804713b9f@https://dev.kibernetika.io/api/v0.2/workspace/demo-set/serving/picture-status-1-0-0/config/live"
+  --cloud_config="36cbba05-b29c-43c2-96fe-54f804713b9f@https://dev.kibernetika.io/api/v0.2/workspace/demo-set/serving/picture-status/config/live"
