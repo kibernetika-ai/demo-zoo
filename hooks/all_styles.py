@@ -118,7 +118,7 @@ class YoungModel:
         if model_path is None:
             self.model = None
             return
-        self.model = YoungHook({},**params)
+        self.model = YoungHook({}, **params)
 
     def process(self, inputs, ctx, **kwargs):
         if self.model is None:
@@ -132,17 +132,20 @@ class YoungModel:
 
 def init_hook(**params):
     LOG.info('Loaded. {}'.format(params))
-    return {'artistic': ArtisticStyles(**params), 'cartoon': CartoonStyles(**params), 'young': YoungModel(**params)}
+    default_model = params.get('default_model', 'young')
+    return {'default_model': default_model, 'artistic': ArtisticStyles(**params), 'cartoon': CartoonStyles(**params),
+            'young': YoungModel(**params)}
 
 
 def process(inputs, ctx, **kwargs):
     style_name = helpers.get_param(inputs, 'style', None)
-    if style_name == 'young':
+    default_model = ctx.global_ctx['default_model']
+    if style_name == 'young' or default_model == 'young':
         return ctx.global_ctx[style_name].process(inputs, ctx, **kwargs)
     img, is_video = helpers.load_image(inputs, 'image', rgb=False)
     if style_name is not None:
         p = style_name.split('_')
-        model = 'artistic'
+        model = default_model
         if len(p) > 1:
             model = p[0]
             style_name = '_'.join(p[1:])
