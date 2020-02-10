@@ -141,7 +141,7 @@ def process(inputs, ctx, **kwargs):
     style_name = helpers.get_param(inputs, 'style', None)
     default_model = ctx.global_ctx['default_model']
     if style_name == 'young' or default_model == 'young':
-        return ctx.global_ctx[style_name].process(inputs, ctx, **kwargs)
+        return ctx.global_ctx['young'].process(inputs, ctx, **kwargs)
     img, is_video = helpers.load_image(inputs, 'image', rgb=False)
     if style_name is not None:
         p = style_name.split('_')
