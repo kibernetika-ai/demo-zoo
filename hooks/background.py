@@ -59,14 +59,17 @@ def process(inputs, ct_x, **kwargs):
         raise RuntimeError('Missing "inputs" key in inputs. Provide an image in "inputs" key')
 
     def _return(result):
+        encoding = ''
         if not is_video:
             if result.shape[2] == 3:
                 result = result[:, :, ::-1]
                 result = cv2.imencode('.jpg', result)[1].tostring()
+                encoding = 'jpeg'
             else:
                 result = result
                 result = cv2.imencode('.png', result)[1].tostring()
-        return {'output': result}
+                encoding = 'png'
+        return {'output': result, 'encoding': encoding}
 
     ratio = 1.0
     w = float(original_image.shape[1])
