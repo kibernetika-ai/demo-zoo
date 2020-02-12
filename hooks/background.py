@@ -13,6 +13,7 @@ backgrounds = {'None': None}
 glob_background = None
 style_srv = 'styles:9000'
 
+
 def init_hook(**params):
     backgrounds_dir = params.get('backgrounds', None)
     global style_srv
@@ -27,7 +28,7 @@ def init_hook(**params):
         back = params.get('background', None)
         if back is not None:
             global glob_background
-            glob_background = backgrounds.get(back,None)
+            glob_background = backgrounds.get(back, None)
 
     LOG.info('Loaded.')
 
@@ -49,7 +50,7 @@ def apply_style(img, style):
     outputs = predict_grpc({'image': img.astype(np.uint8),
                             'style': style},
                            style_srv)
-    return outputs['output'][:,:,::-1]
+    return outputs['output'][:, :, ::-1]
 
 
 def process(inputs, ct_x, **kwargs):
@@ -59,8 +60,12 @@ def process(inputs, ct_x, **kwargs):
 
     def _return(result):
         if not is_video:
-            result = result[:, :, ::-1]
-            result = cv2.imencode('.jpg', result)[1].tostring()
+            if result.shape[2] == 3:
+                result = result[:, :, ::-1]
+                result = cv2.imencode('.jpg', result)[1].tostring()
+            else:
+                result = result
+                result = cv2.imencode('.png', result)[1].tostring()
         return {'output': result}
 
     ratio = 1.0
@@ -197,7 +202,7 @@ def process(inputs, ct_x, **kwargs):
         if 'background_img' in inputs:
             background, _ = load_image(inputs, 'background_img')
         if background is None:
-            back_name = get_param(inputs, 'background',None)
+            back_name = get_param(inputs, 'background', None)
             if back_name is not None:
                 background = backgrounds.get(back_name)
             else:
@@ -210,14 +215,23 @@ def process(inputs, ct_x, **kwargs):
             image = apply_style(original_image, add_style).astype(np.float32)
         else:
             image = original_image.astype(np.float32)
-        mask = np.expand_dims(mask, 2)
-        image = image * mask
         if background is not None:
+            mask = np.expand_dims(mask, 2)
+            image = image * mask
             background = cv2.resize(background, (image.shape[1], image.shape[0]))
             background = background.astype(np.float32)
             background = background * (1 - mask)
             image = background + image
-        image = image.astype(np.uint8)
+            image = image.astype(np.uint8)
+        else:
+            if not is_video:
+                mask = (mask * 255).astype(np.uint8)
+                image = image[:, :, ::-1].astype(np.uint8)
+                image = np.concatenate([image, mask], axis=2)
+            else:
+                mask = np.expand_dims(mask, 2)
+                image = image * mask
+                image = image.astype(np.uint8)
     elif effect == "Mask":
         mask = mask * 255
         image = mask.astype(np.uint8)
