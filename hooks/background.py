@@ -215,8 +215,8 @@ def process(inputs, ct_x, **kwargs):
             image = apply_style(original_image, add_style).astype(np.float32)
         else:
             image = original_image.astype(np.float32)
+        mask = np.expand_dims(mask, 2)
         if background is not None:
-            mask = np.expand_dims(mask, 2)
             image = image * mask
             background = cv2.resize(background, (image.shape[1], image.shape[0]))
             background = background.astype(np.float32)
@@ -229,7 +229,6 @@ def process(inputs, ct_x, **kwargs):
                 image = image[:, :, ::-1].astype(np.uint8)
                 image = np.concatenate([image, mask], axis=2)
             else:
-                mask = np.expand_dims(mask, 2)
                 image = image * mask
                 image = image.astype(np.uint8)
     elif effect == "Mask":
