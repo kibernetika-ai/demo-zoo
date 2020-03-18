@@ -72,7 +72,7 @@ def export(checkpoint_dir, params):
     m.model_upload(model_name, version, export_dir)
     client.update_task_info({'model_path': export_dir, 'num-chans': params['num_chans'],
                              'num-pools': params['num_pools'], 'resolution': params['resolution'],
-                             'model_reference': catalog_ref(args.model, 'mlmodel', version)})
+                             'model_reference': catalog_ref(model_name, 'mlmodel', version)})
 
 
 def train(mode, checkpoint_dir, params):
