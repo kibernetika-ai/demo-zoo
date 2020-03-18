@@ -50,7 +50,7 @@ def export(checkpoint_dir, params):
     export_dir = os.path.join(models, build_id)
     os.makedirs(export_dir,exist_ok=True)
     export_path = net.export_savedmodel(
-        checkpoint_dir,
+        export_dir,
         receiver,
     )
     export_path = export_path.decode("utf-8")
