@@ -71,7 +71,8 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
     else:
         mask = tf.sigmoid(logits)
     logging.info('Features: {}'.format(features.shape))
-    logging.info('Lables: {}'.format(labels.shape))
+    if labels is not None:
+        logging.info('Lables: {}'.format(labels.shape))
     logging.info('mask: {}'.format(mask.shape))
     loss = None
     train_op = None
