@@ -19,8 +19,15 @@ def null_dataset():
 
 
 def export(checkpoint_dir, params):
-    if os.environ.get('TRAINING_DIR', '') != '' and os.environ.get('BASE_TASK_BUILD_ID', '') != '':
-        checkpoint_dir = os.environ['TRAINING_DIR'] + '/' + os.environ['BASE_TASK_BUILD_ID']
+    if os.environ.get('BASE_TASK_BUILD_ID', '') != '':
+        m = client.Client()
+        app = m.apps.get()
+        task = app.get_task('train',os.environ['BASE_TASK_BUILD_ID'])
+        checkpoint_dir = task.exec_info['checkpoint_path']
+        params['num_chans'] = task.exec_info['num-chans']
+        params['num_pools'] = task.exec_info['num-pools']
+        params['checkpoint'] = checkpoint_dir
+
     conf = tf.estimator.RunConfig(
         model_dir=checkpoint_dir,
     )
@@ -34,12 +41,15 @@ def export(checkpoint_dir, params):
         model_dir=checkpoint_dir,
         config=conf,
     )
+    models = os.path.join(checkpoint_dir,'models')
+    export_dir = os.path.join(models, os.environ['BASE_TASK_BUILD_ID'])
+    os.makedirs(export_dir,exist_ok=True)
     export_path = net.export_savedmodel(
         checkpoint_dir,
         receiver,
     )
     export_path = export_path.decode("utf-8")
-    client.update_task_info({'model_path': export_path})
+    client.update_task_info({'model_path': export_dir})
 
 
 def train(mode, checkpoint_dir, params):
