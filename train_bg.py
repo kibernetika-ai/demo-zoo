@@ -6,6 +6,7 @@ import logging
 from models.fastbg.model import FastBGNet
 from models.fastbg.model import data_fn
 from mlboardclient.api import client
+
 import os
 import json
 import time
@@ -18,6 +19,9 @@ def null_dataset():
 
     return _input_fn
 
+def catalog_ref(name, ctype, version):
+    return '#/{}/catalog/{}/{}/versions/{}'. \
+        format(os.environ.get('WORKSPACE_NAME'), ctype, name, version)
 
 def export(checkpoint_dir, params):
     m = client.Client()
@@ -63,7 +67,10 @@ def export(checkpoint_dir, params):
     params['resolution'] = task.exec_info['resolution']
     client.update_task_info({'model_path': export_dir,'num-chans':params['num_chans'],
                              'num-pools':params['num_pools'],'resolution':params['resolution']})
-    m.model_upload('person-mask',f'1.{base_id}.{build_id}',export_dir)
+    version = f'1.{base_id}.{build_id}'
+    model_name = 'person-mask'
+    m.model_upload(model_name,version,export_dir)
+    client.update_task_info({'model_reference': catalog_ref(args.model, 'mlmodel', version)})
 
 
 def train(mode, checkpoint_dir, params):
