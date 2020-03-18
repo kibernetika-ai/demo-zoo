@@ -26,6 +26,7 @@ def export(checkpoint_dir, params):
         checkpoint_dir = task.exec_info['checkpoint_path']
         params['num_chans'] = task.exec_info['num-chans']
         params['num_pools'] = task.exec_info['num-pools']
+        params['resolution'] = task.exec_info['resolution']
         params['checkpoint'] = checkpoint_dir
 
     conf = tf.estimator.RunConfig(
@@ -42,14 +43,18 @@ def export(checkpoint_dir, params):
         config=conf,
     )
     models = os.path.join(checkpoint_dir,'models')
-    export_dir = os.path.join(models, os.environ['BASE_TASK_BUILD_ID'])
+    export_dir = os.path.join(models, os.environ['BUILD_ID'])
     os.makedirs(export_dir,exist_ok=True)
     export_path = net.export_savedmodel(
         checkpoint_dir,
         receiver,
     )
     export_path = export_path.decode("utf-8")
-    client.update_task_info({'model_path': export_dir})
+    params['num_chans'] = task.exec_info['num-chans']
+    params['num_pools'] = task.exec_info['num-pools']
+    params['resolution'] = task.exec_info['resolution']
+    client.update_task_info({'model_path': export_dir,'num-chans':params['num_chans'],
+                             'num-pools':params['num_pools'],'resolution':params['resolution']})
 
 
 def train(mode, checkpoint_dir, params):
