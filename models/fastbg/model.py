@@ -29,6 +29,8 @@ def data_fn(params, training):
             img = tf.image.decode_image(img)
             mask = tf.read_file(a[1])
             mask = tf.image.decode_image(mask)
+            img = tf.image.resize_bilinear(img, [resolution, resolution])
+            mask = tf.image.resize_bilinear(mask, [resolution, resolution])
             mask = mask[:, :, 0]
             mask = tf.expand_dims(mask, -1)
             img = tf.cast(img, dtype=tf.float32) / 255
@@ -43,14 +45,7 @@ def data_fn(params, training):
 
         ds = ds.batch(params['batch_size'], True)
 
-        def _resize(a, b):
-            a = tf.image.resize_bilinear(a, [resolution, resolution])
-            b = tf.image.resize_bilinear(b, [resolution, resolution])
-            a = tf.reshape(a, [params['batch_size'], resolution, resolution, 3])
-            b = tf.reshape(b, [params['batch_size'], resolution, resolution, 1])
-            return a, b
 
-        ds = ds.map(_resize)
         return ds
 
     return len(files) // params['batch_size'], _input_fn
