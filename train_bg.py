@@ -19,9 +19,11 @@ def null_dataset():
 
     return _input_fn
 
+
 def catalog_ref(name, ctype, version):
     return '#/{}/catalog/{}/{}/versions/{}'. \
         format(os.environ.get('WORKSPACE_NAME'), ctype, name, version)
+
 
 def export(checkpoint_dir, params):
     m = client.Client()
@@ -29,7 +31,7 @@ def export(checkpoint_dir, params):
     if os.environ.get('BASE_TASK_BUILD_ID', '') != '':
         app = m.apps.get()
         base_id = os.environ['BASE_TASK_BUILD_ID']
-        task = app.get_task('train',base_id)
+        task = app.get_task('train', base_id)
         checkpoint_dir = task.exec_info['checkpoint_path']
         params['num_chans'] = task.exec_info['num-chans']
         params['num_pools'] = task.exec_info['num-pools']
@@ -49,28 +51,28 @@ def export(checkpoint_dir, params):
         model_dir=checkpoint_dir,
         config=conf,
     )
-    models = os.path.join(checkpoint_dir,'models')
+    models = os.path.join(checkpoint_dir, 'models')
     build_id = os.environ['BUILD_ID']
     export_dir = os.path.join(models, build_id)
-    os.makedirs(export_dir,exist_ok=True)
+    os.makedirs(export_dir, exist_ok=True)
     export_path = net.export_savedmodel(
         export_dir,
         receiver,
     )
     export_path = export_path.decode("utf-8")
     base = os.path.basename(export_path)
-    driver_data = {'driver': 'tensorflow','path': base}
-    with open(os.path.join(export_dir,'_model_config.yaml'),'w') as f:
-        yaml.dump(driver_data,f)
+    driver_data = {'driver': 'tensorflow', 'path': base}
+    with open(os.path.join(export_dir, '_model_config.yaml'), 'w') as f:
+        yaml.dump(driver_data, f)
     params['num_chans'] = task.exec_info['num-chans']
     params['num_pools'] = task.exec_info['num-pools']
     params['resolution'] = task.exec_info['resolution']
-    client.update_task_info({'model_path': export_dir,'num-chans':params['num_chans'],
-                             'num-pools':params['num_pools'],'resolution':params['resolution']})
     version = f'1.{base_id}.{build_id}'
     model_name = 'person-mask'
-    m.model_upload(model_name,version,export_dir)
-    client.update_task_info({'model_reference': catalog_ref(args.model, 'mlmodel', version)})
+    m.model_upload(model_name, version, export_dir)
+    client.update_task_info({'model_path': export_dir, 'num-chans': params['num_chans'],
+                             'num-pools': params['num_pools'], 'resolution': params['resolution'],
+                             'model_reference': catalog_ref(args.model, 'mlmodel', version)})
 
 
 def train(mode, checkpoint_dir, params):
