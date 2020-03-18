@@ -31,8 +31,10 @@ def data_fn(params, training):
             mask = tf.image.decode_image(mask)
             img = tf.image.resize_bilinear(img, [resolution, resolution])
             mask = tf.image.resize_bilinear(mask, [resolution, resolution])
-            mask = mask[:, :, 0]
-            mask = tf.expand_dims(mask, -1)
+            logging.info('img: {}'.format(img.shape))
+            logging.info('mask: {}'.format(mask.shape))
+            img = tf.reshape(img, [resolution, resolution, 3])
+            mask = tf.reshape(mask[:, :, 0:1], [resolution, resolution, 1])
             img = tf.cast(img, dtype=tf.float32) / 255
             mask = tf.cast(mask, dtype=tf.float32) / 255
             return img, mask
