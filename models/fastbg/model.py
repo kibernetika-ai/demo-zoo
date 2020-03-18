@@ -29,12 +29,14 @@ def data_fn(params, training):
             img = tf.image.decode_image(img)
             mask = tf.read_file(a[1])
             mask = tf.image.decode_image(mask)
+            img = tf.expand_dims(img, -1)
+            mask = tf.expand_dims(mask, -1)
             img = tf.image.resize_bilinear(img, [resolution, resolution])
             mask = tf.image.resize_bilinear(mask, [resolution, resolution])
             logging.info('img: {}'.format(img.shape))
             logging.info('mask: {}'.format(mask.shape))
             img = tf.reshape(img, [resolution, resolution, 3])
-            mask = tf.reshape(mask[:, :, 0:1], [resolution, resolution, 1])
+            mask = tf.reshape(mask[:, :, :, 0], [resolution, resolution, 1])
             img = tf.cast(img, dtype=tf.float32) / 255
             mask = tf.cast(mask, dtype=tf.float32) / 255
             return img, mask
@@ -46,7 +48,6 @@ def data_fn(params, training):
             ds = ds.repeat(params['num_epochs'])
 
         ds = ds.batch(params['batch_size'], True)
-
 
         return ds
 
