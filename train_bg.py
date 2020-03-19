@@ -36,6 +36,7 @@ def serving_spec():
             'images': {'cpu': 'kuberlab/serving:latest',
                        'gpu': 'kuberlab/serving:latest-gpu'},
             'command': 'kibernetika-serving --driver model --model-path=$MODEL_DIR  --hooks hook.py',
+            'workDir': '$SRC_DIR',
             'default_volume_mapping': False,
             'disabled': False,
             'skipPrefix': False,
@@ -58,6 +59,7 @@ def serving_spec():
                         ]
                     }
                 ],
+                'responseTemplate': '{"output": "base64_encoded_image"}',
                 'options': {
                     'noCache': True
                 },
@@ -119,7 +121,7 @@ def export(checkpoint_dir, params):
     params['resolution'] = task.exec_info['resolution']
     version = f'1.{base_id}.{build_id}'
     model_name = 'person-mask'
-    m.model_upload(model_name, version, export_dir,spec=serving_spec())
+    m.model_upload(model_name, version, export_dir, spec=serving_spec())
     client.update_task_info({'model_path': export_dir, 'num-chans': params['num_chans'],
                              'num-pools': params['num_pools'], 'resolution': params['resolution'],
                              'model_reference': catalog_ref(model_name, 'mlmodel', version)})
