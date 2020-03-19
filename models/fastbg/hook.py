@@ -54,6 +54,8 @@ def process(inputs, ct_x, **kwargs):
     if mask.shape != image.shape:
         mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
     mask = cv2.GaussianBlur(mask, (21, 21), 11)
+    if mask.shape==2:
+        mask = np.expand_dims(mask,axis=2)
     if not is_video:
         mask = (mask * 255).astype(np.uint8)
         image = image[:, :, ::-1].astype(np.uint8)
