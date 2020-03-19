@@ -25,6 +25,56 @@ def catalog_ref(name, ctype, version):
         format(os.environ.get('WORKSPACE_NAME'), ctype, name, version)
 
 
+def serving_spec():
+    return {'ports': [{'name': 'http',
+                       'protocol': 'TCP',
+                       'port': 9000,
+                       'targetPort': 9000}],
+            'resources': {'accelerators': {'gpu': 0},
+                          'requests': {'cpu': '100m', 'memory': '128Mi'},
+                          'limits': {'cpu': '10', 'memory': '4Gi'}},
+            'images': {'cpu': 'kuberlab/serving:latest',
+                       'gpu': 'kuberlab/serving:latest-gpu'},
+            'command': 'kibernetika-serving --driver model --model-path=$MODEL_DIR  --hooks hook.py',
+            'default_volume_mapping': False,
+            'disabled': False,
+            'skipPrefix': False,
+            'type': 'model',
+            "spec": {
+                'params': [
+                    {
+                        'name': 'inputs',
+                        'type': 'image',
+                        'value': ''
+                    }
+                ],
+                'response': [
+                    {
+                        'name': 'output',
+                        'type': 'bytes',
+                        'shape': [
+                            1,
+                            -1
+                        ]
+                    }
+                ],
+                'options': {
+                    'noCache': True
+                },
+                'rawInput': True,
+                'template': 'image'
+            },
+            'sources': [
+                {
+                    'gitRepo': {
+                        'repository': 'https://github.com/kibernetika-ai/demo-zoo'
+                    },
+                    'name': 'src',
+                    'subPath': 'demo-zoo/models/fastbg'
+                },
+            ]}
+
+
 def export(checkpoint_dir, params):
     m = client.Client()
     base_id = '0'
@@ -69,7 +119,7 @@ def export(checkpoint_dir, params):
     params['resolution'] = task.exec_info['resolution']
     version = f'1.{base_id}.{build_id}'
     model_name = 'person-mask'
-    m.model_upload(model_name, version, export_dir)
+    m.model_upload(model_name, version, export_dir,spec=serving_spec())
     client.update_task_info({'model_path': export_dir, 'num-chans': params['num_chans'],
                              'num-pools': params['num_pools'], 'resolution': params['resolution'],
                              'model_reference': catalog_ref(model_name, 'mlmodel', version)})
