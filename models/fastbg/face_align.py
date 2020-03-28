@@ -32,7 +32,7 @@ def generate_trimap(alpha):
 
 
 def start_coco(args):
-    face_drv.load_model('kuberlab-demo/openvino-face-detection:1.4.0-cpu', args.model_dir)
+    face_drv.load_model('kuberlab-demo/openvino-face-detection:1.4.0-cpu', save_dir=args.model_dir)
     mat_drv.load_model('kuberlab-demo/deepmatting:1.0.0-38', save_dir=args.model_dir)
     global face_input_name, face_input_shape, face_output_name
     face_input_name, face_input_shape = list(face_drv.inputs.items())[0]
@@ -118,12 +118,12 @@ def process_image(face_bboxes_file, out_file_name, img, mask, save_dir):
         xmax = min(b[2] + w // 2, mask.shape[1])
         ymin = max(b[1] - h // 2, 0)
         ymax = min(b[3] + h, mask.shape[0])
-        fm = mask[b[1]:b[3], b[0]:b[2], 0:1]
+        fm = mask[b[1]:b[3], b[0]:b[2]]
         fm[fm > 0] = 1
         a = np.sum(fm) / h / w
         if a < 0.1:
             continue
-        fm = mask[ymin:ymax, xmin:xmax, 0]
+        fm = mask[ymin:ymax, xmin:xmax]
         fi = img[ymin:ymax, xmin:xmax, :]
         si = cv2.resize(fi, (320, 320))
         fm = cv2.resize(fm, (320, 320))
