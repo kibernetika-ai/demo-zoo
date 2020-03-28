@@ -114,9 +114,9 @@ def process_image(face_bboxes_file, out_file_name, img, mask, save_dir):
     for b in boxes:
         h = b[3] - b[1]
         w = b[2] - b[0]
-        xmin = max(b[0] - w // 2, 0)
-        xmax = min(b[2] + w // 2, mask.shape[1])
-        ymin = max(b[1] - h // 2, 0)
+        xmin = max(b[0] - w, 0)
+        xmax = min(b[2] + w, mask.shape[1])
+        ymin = max(b[1] - h, 0)
         ymax = min(b[3] + h, mask.shape[0])
         fm = mask[b[1]:b[3], b[0]:b[2]]
         fm[fm > 0] = 1
