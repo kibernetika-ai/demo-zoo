@@ -11,10 +11,9 @@ import argparse
 LOG = logging.getLogger(__name__)
 
 face_drv = driver.load_driver("model")()
-face_drv.load_model('kuberlab-demo/openvino-face-detection:1.4.0-cpu')
 
 mat_drv = driver.load_driver("model")()
-mat_drv.load_model('kuberlab-demo/deepmatting:1.0.0-38')
+
 
 face_input_name, face_input_shape = list(face_drv.inputs.items())[0]
 face_output_name = list(face_drv.outputs)[0]
@@ -32,6 +31,8 @@ def generate_trimap(alpha):
     return trimap
 
 def start_coco(args):
+    face_drv.load_model('kuberlab-demo/openvino-face-detection:1.4.0-cpu',args.model_dir)
+    mat_drv.load_model('kuberlab-demo/deepmatting:1.0.0-38', save_dir=args.model_dir)
     with open(args.src_dir + '/annotations/instances_train2017.json') as f:
         data = json.load(f)
     data = data['annotations']
@@ -155,6 +156,7 @@ if __name__ == '__main__':
     parser.add_argument('--src_dir', type=str, default='./coco')
     parser.add_argument('--out_dir', type=str, default='./data_tmp')
     parser.add_argument('--limit_pic', type=int, default=10)
+    parser.add_argument('--model_dir', type=str, default='./models')
     args = parser.parse_args()
     start_coco(args)
 
