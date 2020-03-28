@@ -79,7 +79,7 @@ def start_coco(args):
             process_image('/tmp/' + name, name, img, mask, args.out_dir)
             if i % 1000 == 0:
                 print(f'Proccesing: {i} of {count}')
-                i += 1
+            i += 1
 
 
 files_counter = {}
