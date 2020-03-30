@@ -83,7 +83,8 @@ def export(checkpoint_dir, params):
     if os.environ.get('BASE_TASK_BUILD_ID', '') != '':
         app = m.apps.get()
         base_id = os.environ['BASE_TASK_BUILD_ID']
-        task = app.get_task('train', base_id)
+        task_name = os.environ['BASE_TASK_NAME']
+        task = app.get_task(task_name, base_id)
         checkpoint_dir = task.exec_info['checkpoint_path']
         params['num_chans'] = task.exec_info['num-chans']
         params['num_pools'] = task.exec_info['num-pools']
