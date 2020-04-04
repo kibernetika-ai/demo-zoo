@@ -5,6 +5,7 @@ import tensorflow as tf
 import logging
 from models.fastbg.model import FastBGNet
 from models.fastbg.model import data_fn
+from models.fastbg.model import augumnted_data_fn
 from mlboardclient.api import client
 
 import os
@@ -143,7 +144,12 @@ def train(mode, checkpoint_dir, params):
         keep_checkpoint_max=params['keep_checkpoint_max'],
         log_step_count_steps=params['log_step_count_steps'],
     )
-    epoch_len, fn = data_fn(params, mode == 'train')
+    if params['coco'] is None:
+        logging.info('Use generic')
+        epoch_len, fn = data_fn(params, mode == 'train')
+    else:
+        logging.info('Use Coco')
+        epoch_len, fn = augumnted_data_fn(params, mode == 'train')
     logging.info('Samples count: {}'.format(epoch_len))
     params['epoch_len'] = epoch_len
     net = FastBGNet(
@@ -211,7 +217,8 @@ def main(args):
             'lr.lr-gamma': args.lr_gamma,
             'weight-decay': args.weight_decay,
             'checkpoint_path': str(args.checkpoint_dir),
-            'resolution': args.resolution
+            'resolution': args.resolution,
+            'coco':args.coco,
         })
         train('train', args.checkpoint_dir, params)
     else:
@@ -261,6 +268,8 @@ def create_arg_parser():
 
     parser.add_argument('--data_set', type=str, required=True,
                         help='Path to the dataset')
+    parser.add_argument('--coco', type=str, default=None,
+                        help='Coco path')
     parser.add_argument(
         '--save_summary_steps',
         type=int,

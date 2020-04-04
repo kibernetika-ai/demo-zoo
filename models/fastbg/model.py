@@ -7,8 +7,112 @@ from tensorflow.python.training import training_util
 from tensorflow.python.training.session_run_hook import SessionRunArgs
 import math
 import glob
+import json
 from mlboardclient.report.tensorflow_rpt import MlBoardReporter
+import numpy as np
+import cv2
+import random
 
+def augumnted_data_fn(params, training):
+    import albumentations
+    def _strong_aug(p=0.5):
+        return albumentations.Compose([
+            albumentations.Flip(),
+            albumentations.OneOf([
+                albumentations.MotionBlur(p=0.2),
+                albumentations.MedianBlur(blur_limit=3, p=0.1),
+                albumentations.Blur(blur_limit=3, p=0.1),
+            ], p=0.2),
+            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=4, p=0.2),
+            albumentations.OneOf([
+                albumentations.OpticalDistortion(p=0.3),
+                albumentations.GridDistortion(p=0.1),
+                albumentations.IAAPiecewiseAffine(p=0.3),
+            ], p=0.2),
+            albumentations.OneOf([
+                albumentations.CLAHE(clip_limit=2),
+                albumentations.IAASharpen(),
+                albumentations.IAAEmboss(),
+                albumentations.RandomBrightnessContrast(),
+            ], p=0.3),
+            albumentations.HueSaturationValue(p=0.3),
+        ], p=p)
+
+    augmentation = _strong_aug(p=0.9)
+    data_set = params['data_set']
+    files = glob.glob(data_set + '/masks/*.*')
+    for i in range(len(files)):
+        mask = files[i]
+        img = os.path.basename(mask)
+        img = data_set + '/images/' + img
+        files[i] = (img, mask)
+    coco = params['coco']
+    with open(coco+'/annotations/instances_train2017.json') as f:
+        coco_data = json.load(f)
+    coco_images = {}
+    people = {}
+    for a in coco_data:
+        i_id = a['image_id']
+        if a['category_id'] != 1:
+            if i_id in people:
+                continue
+            else:
+                coco_images[i_id] = True
+        else:
+            if i_id in coco_images:
+                del coco_images[i_id]
+            people[i_id] = True
+    del people
+    coco_images = list(coco_images.keys())
+    def _input_fn():
+        def _generator():
+            for i in files:
+                img = cv2.imread(i[0])
+                mask = cv2.imread(i[1])
+                if len(mask.shape)==3:
+                    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                if np.random.uniform(0,1)>0.2:
+                    s = np.random.uniform(0.3,1)
+                    w0 = img.shape[1]
+                    h0 = img.shape[0]
+                    w = int(s*w0)
+                    h = int(s*h0)
+                    img0 = cv2.resize((img,(w,h)))
+                    mask0 = cv2.resize((mask, (w, h)))
+                    mask0 = mask0.astype(np.float32)/255
+                    img0 = img0.astype(np.float32)/255*mask0
+                    x_shift = np.random.uniform(0,w0-w)
+                    y_shift = np.random.uniform(0, w0 - w)
+                    img = cv2.imread(random.choice(coco_images))
+                    img = cv2.resize(img,(160,160))
+                    img = img.astype(np.floa32)/255
+                    mask = np.zeros((160,160,1),np.float32)
+                    img[y_shift:y_shift+h,x_shift:x_shift+w,:] = img0+(img[y_shift:y_shift+h,x_shift:x_shift+w,:]*(1-mask0))
+                    mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask0
+                    img = (img*255).astype(np.uint8)
+                    mask = (mask * 255).astype(np.uint8)
+                mask = mask[:, :, 0]
+                data = {"image": img, "mask": mask}
+                augmented = augmentation(**data)
+                img, mask = augmented["image"], augmented["mask"]
+                if len(mask.shape)==2:
+                    mask = np.reshape(mask,(160,160,1))
+                img = img.astype(np.float32)/255
+                mask = mask.astype(np.float32)/255
+                yield img,mask
+
+        ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
+                                            (tf.TensorShape([160, 1603, 3]),tf.TensorShape([160, 1603, 1])))
+        if training:
+            ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
+        if training:
+            ds = ds.repeat(params['num_epochs'])
+
+        ds = ds.batch(params['batch_size'], True)
+
+        return ds
+
+    return len(files) // params['batch_size'], _input_fn
 
 def data_fn(params, training):
     data_set = params['data_set']
