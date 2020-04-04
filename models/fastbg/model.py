@@ -46,8 +46,8 @@ def augumnted_data_fn(params, training):
         img = os.path.basename(mask)
         img = data_set + '/images/' + img
         files[i] = (img, mask)
-    coco = params['coco']
-    with open(coco+'/annotations/instances_train2017.json') as f:
+    coco_dir = params['coco']
+    with open(coco_dir+'/annotations/instances_train2017.json') as f:
         coco_data = json.load(f)
     coco_data = coco_data['annotations']
     coco_images = {}
@@ -85,6 +85,7 @@ def augumnted_data_fn(params, training):
                     img0 = img0.astype(np.float32)/255*mask0
                     x_shift = int(np.random.uniform(0,w0-w))
                     y_shift = int(np.random.uniform(0, h0 - h))
+                    name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
                     img = cv2.imread(random.choice(coco_images))
                     img = cv2.resize(img,(160,160))
                     img = img.astype(np.floa32)/255
