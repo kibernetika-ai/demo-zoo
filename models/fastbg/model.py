@@ -78,12 +78,12 @@ def augumnted_data_fn(params, training):
                     h0 = img.shape[0]
                     w = int(s*w0)
                     h = int(s*h0)
-                    img0 = cv2.resize((img,(w,h)))
-                    mask0 = cv2.resize((mask, (w, h)))
+                    img0 = cv2.resize(img,(w,h))
+                    mask0 = cv2.resize(mask, (w, h))
                     mask0 = mask0.astype(np.float32)/255
                     img0 = img0.astype(np.float32)/255*mask0
-                    x_shift = np.random.uniform(0,w0-w)
-                    y_shift = np.random.uniform(0, w0 - w)
+                    x_shift = int(np.random.uniform(0,w0-w))
+                    y_shift = int(np.random.uniform(0, h0 - h))
                     img = cv2.imread(random.choice(coco_images))
                     img = cv2.resize(img,(160,160))
                     img = img.astype(np.floa32)/255
