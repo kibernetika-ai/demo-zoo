@@ -23,7 +23,7 @@ def augumnted_data_fn(params, training):
                 albumentations.MedianBlur(blur_limit=3, p=0.1),
                 albumentations.Blur(blur_limit=3, p=0.1),
             ], p=0.2),
-            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=4, p=0.2),
+            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=15, p=0.3),
             albumentations.OneOf([
                 albumentations.OpticalDistortion(p=0.3),
                 albumentations.GridDistortion(p=0.1),
@@ -33,8 +33,10 @@ def augumnted_data_fn(params, training):
                 albumentations.CLAHE(clip_limit=2),
                 albumentations.IAASharpen(),
                 albumentations.IAAEmboss(),
-                albumentations.RandomBrightnessContrast(),
             ], p=0.3),
+            albumentations.OneOf([
+                albumentations.RandomBrightnessContrast(p=0.3),
+                ],p=0.3),
             albumentations.HueSaturationValue(p=0.3),
         ], p=p)
 
@@ -79,10 +81,12 @@ def augumnted_data_fn(params, training):
                     w = int(s*w0)
                     h = int(s*h0)
                     img0 = cv2.resize(img,(w,h))
-                    mask0 = cv2.resize(mask, (w, h))
-                    mask0 = mask0.astype(np.float32)/255
-                    mask0 = np.reshape(mask0,(h,w,1))
-                    img0 = img0.astype(np.float32)/255*mask0
+                    out_mask = cv2.resize(mask, (w, h))
+                    out_mask = out_mask.astype(np.float32)/255
+                    out_mask = np.reshape(out_mask,(h,w,1))
+
+                    pmask = cv2.GaussianBlur(out_mask,(3,3),3)
+                    img0 = img0.astype(np.float32)/255*pmask
                     x_shift = int(np.random.uniform(0,w0-w))
                     y_shift = int(np.random.uniform(0, h0 - h))
                     name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
@@ -90,8 +94,8 @@ def augumnted_data_fn(params, training):
                     img = cv2.resize(img,(160,160))
                     img = img.astype(np.float32)/255
                     mask = np.zeros((160,160,1),np.float32)
-                    img[y_shift:y_shift+h,x_shift:x_shift+w,:] = img0+(img[y_shift:y_shift+h,x_shift:x_shift+w,:]*(1-mask0))
-                    mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask0
+                    img[y_shift:y_shift+h,x_shift:x_shift+w,:] = img0+(img[y_shift:y_shift+h,x_shift:x_shift+w,:]*(1-pmask))
+                    mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = out_mask
                     img = (img*255).astype(np.uint8)
                     mask = (mask * 255).astype(np.uint8)
                 if len(mask.shape)==3:
