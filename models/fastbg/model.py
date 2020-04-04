@@ -71,11 +71,12 @@ def augumnted_data_fn(params, training):
         def _generator():
             for i in files:
                 img = cv2.imread(i[0])[:,:,::-1]
-                mask = cv2.imread(i[1])[:,:,::-1]
+                mask = cv2.imread(i[1])[:,:,:]
                 if len(mask.shape)==3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
                 if np.random.uniform(0,1)>0.2:
-                    s = np.random.uniform(0.3,1)
+                    #s = np.random.uniform(0.3,1)
+                    s = 1
                     w0 = img.shape[1]
                     h0 = img.shape[0]
                     w = int(s*w0)
@@ -99,7 +100,7 @@ def augumnted_data_fn(params, training):
                     mask = np.zeros((160,160,1),np.float32)
                     img[y_shift:y_shift+h,x_shift:x_shift+w,:] = img0+(img[y_shift:y_shift+h,x_shift:x_shift+w,:]*(1-pmask))
                     mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = out_mask
-                    img = (img*255).astype(np.uint8)
+                    img = (img * 255).astype(np.uint8)
                     mask = (mask * 255).astype(np.uint8)
                 if len(mask.shape)==3:
                     mask = mask[:, :, 0]
