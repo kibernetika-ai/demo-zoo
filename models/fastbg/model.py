@@ -49,6 +49,7 @@ def augumnted_data_fn(params, training):
     coco = params['coco']
     with open(coco+'/annotations/instances_train2017.json') as f:
         coco_data = json.load(f)
+    coco_data = coco_data['annotations']
     coco_images = {}
     people = {}
     for a in coco_data:
