@@ -103,7 +103,7 @@ def augumnted_data_fn(params, training):
                 yield img,mask
 
         ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
-                                            (tf.TensorShape([160, 1603, 3]),tf.TensorShape([160, 1603, 1])))
+                                            (tf.TensorShape([160, 160, 3]),tf.TensorShape([160, 160, 1])))
         if training:
             ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
         if training:
