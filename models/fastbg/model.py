@@ -86,7 +86,7 @@ def augumnted_data_fn(params, training):
                     x_shift = int(np.random.uniform(0,w0-w))
                     y_shift = int(np.random.uniform(0, h0 - h))
                     name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
-                    img = cv2.imread(random.choice(coco_images))
+                    img = cv2.imread(name)
                     img = cv2.resize(img,(160,160))
                     img = img.astype(np.floa32)/255
                     mask = np.zeros((160,160,1),np.float32)
