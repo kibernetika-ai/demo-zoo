@@ -86,6 +86,7 @@ def augumnted_data_fn(params, training):
                     out_mask = np.reshape(out_mask,(h,w,1))
 
                     pmask = cv2.GaussianBlur(out_mask,(3,3),3)
+                    pmask = np.reshape(pmask,(160,160,1))
                     img0 = img0.astype(np.float32)/255*pmask
                     x_shift = int(np.random.uniform(0,w0-w))
                     y_shift = int(np.random.uniform(0, h0 - h))
