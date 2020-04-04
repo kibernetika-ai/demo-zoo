@@ -81,7 +81,7 @@ def augumnted_data_fn(params, training):
                     img0 = cv2.resize(img,(w,h))
                     mask0 = cv2.resize(mask, (w, h))
                     mask0 = mask0.astype(np.float32)/255
-                    mask0 = np.reshape(mask0,(160,160,1))
+                    mask0 = np.reshape(mask0,(h,w,1))
                     img0 = img0.astype(np.float32)/255*mask0
                     x_shift = int(np.random.uniform(0,w0-w))
                     y_shift = int(np.random.uniform(0, h0 - h))
