@@ -17,7 +17,7 @@ def augumnted_data_fn(params, training):
     import albumentations
     def _strong_aug(p=0.5):
         return albumentations.Compose([
-            albumentations.Flip(),
+            albumentations.HorizontalFlip(),
             albumentations.OneOf([
                 albumentations.MotionBlur(p=0.2),
                 albumentations.MedianBlur(blur_limit=3, p=0.1),
@@ -68,8 +68,8 @@ def augumnted_data_fn(params, training):
     def _input_fn():
         def _generator():
             for i in files:
-                img = cv2.imread(i[0])
-                mask = cv2.imread(i[1])
+                img = cv2.imread(i[0])[:,:,::-1]
+                mask = cv2.imread(i[1])[:,:,::-1]
                 if len(mask.shape)==3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
                 if np.random.uniform(0,1)>0.2:
@@ -86,7 +86,7 @@ def augumnted_data_fn(params, training):
                     x_shift = int(np.random.uniform(0,w0-w))
                     y_shift = int(np.random.uniform(0, h0 - h))
                     name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
-                    img = cv2.imread(name)
+                    img = cv2.imread(name)[:,:,::-1]
                     img = cv2.resize(img,(160,160))
                     img = img.astype(np.float32)/255
                     mask = np.zeros((160,160,1),np.float32)
