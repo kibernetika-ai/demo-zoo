@@ -200,6 +200,7 @@ def main(args):
         'data_set': args.data_set,
         'optimizer': args.optimizer,
         'loss': args.loss,
+        'coco': args.coco,
     }
     if args.export:
         export(args.checkpoint_dir, params)
@@ -218,7 +219,6 @@ def main(args):
             'weight-decay': args.weight_decay,
             'checkpoint_path': str(args.checkpoint_dir),
             'resolution': args.resolution,
-            'coco':args.coco,
         })
         train('train', args.checkpoint_dir, params)
     else:
