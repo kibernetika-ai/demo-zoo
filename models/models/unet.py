@@ -54,7 +54,7 @@ def unet(inputs, out_chans, chans, drop_prob, num_pool_layers, training=True):
     logging.info('Down_{} - {}'.format(i + 2, output.shape))
 
     output = upnet('', final_down, num_pool_layers, down_sample_layers, ch, drop_prob, training)
-    output = tf.layers.conv2d(output, ch, kernel_size=1, padding='same', name="conv_1")
+    output = tf.layers.conv2d(output, chans, kernel_size=1, padding='same', name="conv_1")
     output = tf.layers.conv2d(output, out_chans, kernel_size=1, padding='same', name="conv_2_mask")
     output = tf.layers.conv2d(output, out_chans, kernel_size=1, padding='same', name="final_mask")
     return output
