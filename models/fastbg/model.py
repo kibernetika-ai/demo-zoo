@@ -191,12 +191,12 @@ def augumnted_data_fn(params, training):
                 if np.random.uniform(0,1)>0.2:
                     pmask = cv2.GaussianBlur(mask, (3, 3), 3)
                     pmask = pmask.astype(np.float32) / 255
+                    pmask = np.reshape(pmask, (160, 160, 1))
                     front_img = img.astype(np.float32)/255.0*pmask
                     name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
                     img = cv2.imread(name)[:,:,::-1]
                     img = cv2.resize(img,(160,160))
-                    img = img.astype(np.float32)/255
-                    img = front_img+img*(1-pmask)
+                    img = front_img+img.astype(np.float32)/255*(1-pmask)
                     img = (img * 255).astype(np.uint8)
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
