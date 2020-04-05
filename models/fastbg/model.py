@@ -86,7 +86,7 @@ def augumnted_data_fn(params, training):
                     pmask = cv2.resize(mask, (w, h))
                     pmask = cv2.GaussianBlur(pmask, (3, 3), 3)
                     pmask = pmask.astype(np.float32) / 255
-                    pmask = np.reshape(pmask, (160, 160, 1))
+                    pmask = np.reshape(pmask, (h, w, 1))
 
                     front_img = front_img.astype(np.float32)/255.0*pmask
                     name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
