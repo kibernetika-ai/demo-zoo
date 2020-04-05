@@ -187,7 +187,7 @@ def augumnted_data_fn(params, training):
                 mask = cv2.imread(i[1])[:,:,:]
                 if len(mask.shape)==3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask[[mask]>0] = 255
+                mask[mask>0] = 255
                 if np.random.uniform(0,1)>0.2:
                     pmask = cv2.GaussianBlur(mask, (3, 3), 3)
                     pmask = pmask.astype(np.float32) / 255
@@ -201,6 +201,7 @@ def augumnted_data_fn(params, training):
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
+                mask[mask > 0] = 255
                 mask = np.reshape(mask,(160,160,1))
                 img = img.astype(np.float32)/255
                 mask = mask.astype(np.float32)/255
