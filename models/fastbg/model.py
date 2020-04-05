@@ -13,7 +13,7 @@ import numpy as np
 import cv2
 import random
 
-def augumnted_data_fn(params, training):
+def augumnted_data_fn_1(params, training):
     import albumentations
     def _strong_aug(p=0.5):
         return albumentations.Compose([
@@ -109,6 +109,99 @@ def augumnted_data_fn(params, training):
                 img, mask = augmented["image"], augmented["mask"]
                 if len(mask.shape)==2:
                     mask = np.reshape(mask,(160,160,1))
+                img = img.astype(np.float32)/255
+                mask = mask.astype(np.float32)/255
+                yield img,mask
+
+        ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
+                                            (tf.TensorShape([160, 160, 3]),tf.TensorShape([160, 160, 1])))
+        if training:
+            ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
+        if training:
+            ds = ds.repeat(params['num_epochs'])
+
+        ds = ds.batch(params['batch_size'], True)
+
+        return ds
+
+    return len(files) // params['batch_size'], _input_fn
+
+def augumnted_data_fn(params, training):
+    import albumentations
+    def _strong_aug(p=0.5):
+        return albumentations.Compose([
+            albumentations.HorizontalFlip(),
+            albumentations.OneOf([
+                albumentations.MotionBlur(p=0.2),
+                albumentations.MedianBlur(blur_limit=3, p=0.1),
+                albumentations.Blur(blur_limit=3, p=0.1),
+            ], p=0.2),
+            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=15, p=0.3),
+            albumentations.OneOf([
+                albumentations.OpticalDistortion(p=0.3),
+                albumentations.GridDistortion(p=0.1),
+                albumentations.IAAPiecewiseAffine(p=0.3),
+            ], p=0.2),
+            albumentations.OneOf([
+                albumentations.CLAHE(clip_limit=2),
+                albumentations.IAASharpen(),
+                albumentations.IAAEmboss(),
+            ], p=0.3),
+            albumentations.OneOf([
+                albumentations.RandomBrightnessContrast(p=0.3),
+                ],p=0.4),
+            albumentations.HueSaturationValue(p=0.3),
+        ], p=p)
+
+    augmentation = _strong_aug(p=0.9)
+    data_set = params['data_set']
+    files = glob.glob(data_set + '/masks/*.*')
+    for i in range(len(files)):
+        mask = files[i]
+        img = os.path.basename(mask)
+        img = data_set + '/images/' + img
+        files[i] = (img, mask)
+    coco_dir = params['coco']
+    with open(coco_dir+'/annotations/instances_train2017.json') as f:
+        coco_data = json.load(f)
+    coco_data = coco_data['annotations']
+    coco_images = {}
+    people = {}
+    for a in coco_data:
+        i_id = a['image_id']
+        if a['category_id'] != 1:
+            if i_id in people:
+                continue
+            else:
+                coco_images[i_id] = True
+        else:
+            if i_id in coco_images:
+                del coco_images[i_id]
+            people[i_id] = True
+    del people
+    coco_images = list(coco_images.keys())
+    def _input_fn():
+        def _generator():
+            for i in files:
+                img = cv2.imread(i[0])[:,:,::-1]
+                mask = cv2.imread(i[1])[:,:,:]
+                if len(mask.shape)==3:
+                    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                mask[[mask]>0] = 255
+                if np.random.uniform(0,1)>0.2:
+                    pmask = cv2.GaussianBlur(mask, (3, 3), 3)
+                    pmask = pmask.astype(np.float32) / 255
+                    front_img = img.astype(np.float32)/255.0*pmask
+                    name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
+                    img = cv2.imread(name)[:,:,::-1]
+                    img = cv2.resize(img,(160,160))
+                    img = img.astype(np.float32)/255
+                    img = front_img+img*(1-pmask)
+                    img = (img * 255).astype(np.uint8)
+                data = {"image": img, "mask": mask}
+                augmented = augmentation(**data)
+                img, mask = augmented["image"], augmented["mask"]
+                mask = np.reshape(mask,(160,160,1))
                 img = img.astype(np.float32)/255
                 mask = mask.astype(np.float32)/255
                 yield img,mask
