@@ -105,7 +105,6 @@ def augumnted_data_fn(params, training):
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
-                mask[mask > 0] = 255
                 mask = np.reshape(mask,(160,160,1))
                 img = img.astype(np.float32)/255
                 mask = mask.astype(np.float32)/255
