@@ -13,118 +13,6 @@ import numpy as np
 import cv2
 import random
 
-def augumnted_data_fn_1(params, training):
-    import albumentations
-    def _strong_aug(p=0.5):
-        return albumentations.Compose([
-            albumentations.HorizontalFlip(),
-            albumentations.OneOf([
-                albumentations.MotionBlur(p=0.2),
-                albumentations.MedianBlur(blur_limit=3, p=0.1),
-                albumentations.Blur(blur_limit=3, p=0.1),
-            ], p=0.2),
-            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=15, p=0.3),
-            albumentations.OneOf([
-                albumentations.OpticalDistortion(p=0.3),
-                albumentations.GridDistortion(p=0.1),
-                albumentations.IAAPiecewiseAffine(p=0.3),
-            ], p=0.2),
-            albumentations.OneOf([
-                albumentations.CLAHE(clip_limit=2),
-                albumentations.IAASharpen(),
-                albumentations.IAAEmboss(),
-            ], p=0.3),
-            albumentations.OneOf([
-                albumentations.RandomBrightnessContrast(p=0.3),
-                ],p=0.3),
-            albumentations.HueSaturationValue(p=0.3),
-        ], p=p)
-
-    augmentation = _strong_aug(p=0.9)
-    data_set = params['data_set']
-    files = glob.glob(data_set + '/masks/*.*')
-    for i in range(len(files)):
-        mask = files[i]
-        img = os.path.basename(mask)
-        img = data_set + '/images/' + img
-        files[i] = (img, mask)
-    coco_dir = params['coco']
-    with open(coco_dir+'/annotations/instances_train2017.json') as f:
-        coco_data = json.load(f)
-    coco_data = coco_data['annotations']
-    coco_images = {}
-    people = {}
-    for a in coco_data:
-        i_id = a['image_id']
-        if a['category_id'] != 1:
-            if i_id in people:
-                continue
-            else:
-                coco_images[i_id] = True
-        else:
-            if i_id in coco_images:
-                del coco_images[i_id]
-            people[i_id] = True
-    del people
-    coco_images = list(coco_images.keys())
-    def _input_fn():
-        def _generator():
-            for i in files:
-                img = cv2.imread(i[0])[:,:,::-1]
-                mask = cv2.imread(i[1])[:,:,:]
-                if len(mask.shape)==3:
-                    mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                if np.random.uniform(0,1)>0.2:
-                    #s = np.random.uniform(0.3,1)
-                    s = 1
-                    w0 = img.shape[1]
-                    h0 = img.shape[0]
-                    w = int(s*w0)
-                    h = int(s*h0)
-                    img0 = cv2.resize(img,(w,h))
-                    out_mask = cv2.resize(mask, (w, h))
-                    pmask = cv2.GaussianBlur(out_mask, (3, 3), 3)
-                    out_mask = out_mask.astype(np.float32)/255
-                    out_mask = np.reshape(out_mask,(h,w,1))
-                    pmask = pmask.astype(np.float32) / 255
-                    pmask = np.reshape(pmask, (h, w, 1))
-
-
-                    img0 = img0.astype(np.float32)/255*pmask
-                    x_shift = int(np.random.uniform(0,w0-w))
-                    y_shift = int(np.random.uniform(0, h0 - h))
-                    name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
-                    img = cv2.imread(name)[:,:,::-1]
-                    img = cv2.resize(img,(160,160))
-                    img = img.astype(np.float32)/255
-                    mask = np.zeros((160,160,1),np.float32)
-                    img[y_shift:y_shift+h,x_shift:x_shift+w,:] = img0+(img[y_shift:y_shift+h,x_shift:x_shift+w,:]*(1-pmask))
-                    mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = out_mask
-                    img = (img * 255).astype(np.uint8)
-                    mask = (mask * 255).astype(np.uint8)
-                if len(mask.shape)==3:
-                    mask = mask[:, :, 0]
-                data = {"image": img, "mask": mask}
-                augmented = augmentation(**data)
-                img, mask = augmented["image"], augmented["mask"]
-                if len(mask.shape)==2:
-                    mask = np.reshape(mask,(160,160,1))
-                img = img.astype(np.float32)/255
-                mask = mask.astype(np.float32)/255
-                yield img,mask
-
-        ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
-                                            (tf.TensorShape([160, 160, 3]),tf.TensorShape([160, 160, 1])))
-        if training:
-            ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
-        if training:
-            ds = ds.repeat(params['num_epochs'])
-
-        ds = ds.batch(params['batch_size'], True)
-
-        return ds
-
-    return len(files) // params['batch_size'], _input_fn
 
 def augumnted_data_fn(params, training):
     import albumentations
@@ -189,15 +77,31 @@ def augumnted_data_fn(params, training):
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
                 mask[mask>0] = 255
                 if np.random.uniform(0,1)>0.2:
-                    pmask = cv2.GaussianBlur(mask, (3, 3), 3)
+                    s = np.random.uniform(0.3,1)
+                    w0 = img.shape[1]
+                    h0 = img.shape[0]
+                    w = int(s * w0)
+                    h = int(s * h0)
+                    front_img = cv2.resize(img, (w, h))
+                    pmask = cv2.resize(mask, (w, h))
+                    pmask = cv2.GaussianBlur(pmask, (3, 3), 3)
                     pmask = pmask.astype(np.float32) / 255
                     pmask = np.reshape(pmask, (160, 160, 1))
-                    front_img = img.astype(np.float32)/255.0*pmask
+
+                    front_img = front_img.astype(np.float32)/255.0*pmask
                     name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
                     img = cv2.imread(name)[:,:,::-1]
                     img = cv2.resize(img,(160,160))
-                    img = front_img+img.astype(np.float32)/255*(1-pmask)
+
+                    x_shift = int(np.random.uniform(0, w0 - w))
+                    y_shift = int(np.random.uniform(0, h0 - h))
+                    mask = np.zeros((160, 160, 1), np.float32)
+                    img = img.astype(np.float32) / 255
+                    img[y_shift:y_shift + h, x_shift:x_shift + w, :] = front_img + (
+                                img[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - pmask))
+                    mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = pmask
                     img = (img * 255).astype(np.uint8)
+                    mask = (mask*255).astype(np.uint8)
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
