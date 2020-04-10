@@ -2,11 +2,11 @@ import tensorflow as tf
 import logging
 
 
-def conv_block(input, out_chans, drop_prob, name, pooling, training):
+def conv_block(input, out_chans, drop_prob, name, pooling, training,kernel_size=3):
     with tf.variable_scope("layer_{}".format(name)):
         out = input
         for j in range(2):
-            out = tf.layers.conv2d(out, out_chans, kernel_size=3, padding='same', name="conv_{}".format(j + 1))
+            out = tf.layers.conv2d(out, out_chans, kernel_size=kernel_size, padding='same', name="conv_{}".format(j + 1))
             out = tf.layers.batch_normalization(out, training=training, name="bn_{}".format(j + 1))
             out = tf.nn.relu(out, name="relu_{}".format(j + 1))
             if training:
@@ -54,7 +54,7 @@ def blend(ci,out,outs,drop_prob,training):
 
 
 def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], training=True):
-    output, pull = conv_block(inputs, chans, drop_prob, 'down_1', True, training)
+    output, pull = conv_block(inputs, chans, drop_prob, 'down_1', True, training,kernel_size=7)
     r_down_sample_layers = []
     r_pulls = []
     for rindex,r in enumerate(refines):
@@ -95,7 +95,7 @@ def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], traini
     logging.info('Final Down_{} - {}'.format(i + 2, final_down.shape))
 
     output = upnet('', final_down, num_pool_layers, down_sample_layers, ch, drop_prob, training)
-    output = tf.layers.conv2d(output, chans, kernel_size=1, padding='same', name="conv_1")
+    output = tf.layers.conv2d(output, chans, kernel_size=7, padding='same', name="conv_1")
     output = tf.layers.conv2d(output, out_chans, kernel_size=1, padding='same', name="conv_2_mask")
     output = tf.layers.conv2d(output, out_chans, kernel_size=1, padding='same', name="final_mask")
     return output

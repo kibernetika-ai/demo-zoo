@@ -1,5 +1,8 @@
 import tensorflow as tf
 import os
+
+from scipy import ndimage
+
 from models.models.unet import unet
 import logging
 from tensorflow.python.training import session_run_hook
@@ -12,6 +15,27 @@ from mlboardclient.report.tensorflow_rpt import MlBoardReporter
 import numpy as np
 import cv2
 import random
+
+unknown_code = 128
+
+def generate_weight(mask):
+    weight = mask.astype(np.uint8)
+    weight = np.reshape(weight, (weight.shape[0], weight.shape[1]))
+    weight[weight > 0] = 255
+    trimap = generate_trimap(weight)
+    weight = weight.astype(np.float32)
+    weight[weight == 0] = 1
+    weight[weight == 255] = 1.5
+    weight[trimap == unknown_code] = 2
+    return np.reshape(weight, (weight.shape[0], weight.shape[1], 1))
+
+def generate_trimap(alpha):
+    trimap = np.copy(alpha)
+    k_size = 5
+    trimap[np.where((ndimage.grey_dilation(alpha[:, :], size=(k_size, k_size)) - ndimage.grey_erosion(alpha[:, :],
+                                                                                                      size=(k_size,
+                                                                                                            k_size))) != 0)] = unknown_code
+    return trimap
 
 def _coco_images(params):
     coco_dir = params['coco']
@@ -162,7 +186,6 @@ def video_data_fn(params, training):
                 front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift,False)
                 front_img1 = make_post_aug(front_img1)
                 front_img0 = make_post_aug(front_img0)
-
                 thresh = cv2.cvtColor(front_img1, cv2.COLOR_BGR2GRAY)
                 thresh = cv2.medianBlur(thresh, 3)
                 thresh = cv2.adaptiveThreshold(thresh, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
@@ -173,9 +196,10 @@ def video_data_fn(params, training):
                 front_img1 = front_img1.astype(np.float32) / 255
                 front_img0 = front_img0.astype(np.float32) / 255
 
+                weight = generate_weight(pmask1)
                 pmask1 = pmask1.astype(np.float32) / 255
                 img = np.concatenate([front_img1, front_img0, thresh], axis=2)
-                yield img, pmask1
+                yield img, np.concatenate([pmask1,weight],axis=2)
 
         ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
                                             (tf.TensorShape([160, 160, 7]), tf.TensorShape([160, 160, 1])))
@@ -257,9 +281,10 @@ def augumnted_data_fn(params, training):
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
                 mask = np.reshape(mask,(160,160,1))
+                weight = generate_weight(mask)
                 img = img.astype(np.float32)/255
                 mask = mask.astype(np.float32)/255
-                yield img,mask
+                yield img, np.concatenate([mask,weight],axis=2)
 
         ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
                                             (tf.TensorShape([160, 160, 3]),tf.TensorShape([160, 160, 1])))
@@ -369,6 +394,8 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
         learning_rate_var = tf.Variable(float(params['lr']), trainable=False, name='lr',
                                         collections=[tf.GraphKeys.LOCAL_VARIABLES])
 
+        weights = labels[:,:,1:]
+        labels = labels[:, :, 0:1]
         flabels = tf.cast(labels, tf.float32)
         if params['loss'] == 'entropy':
             llabels = tf.cast(labels, tf.int32)
@@ -379,10 +406,10 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
             original = features * flabels
             predicted = features * mask
             loss_content = tf.losses.absolute_difference(original, predicted)
-            mask_loss = tf.losses.mean_squared_error(flabels, mask)
+            mask_loss = tf.losses.mean_squared_error(flabels, mask,weights=weights)
             loss = (loss_content + mask_loss) * 0.5
         else:
-            loss = tf.losses.absolute_difference(flabels, mask)
+            loss = tf.losses.absolute_difference(flabels, mask,weights=weights)
         mse = tf.losses.mean_squared_error(flabels, mask)
         nmse = tf.norm(flabels - mask) ** 2 / tf.norm(flabels) ** 2
 
