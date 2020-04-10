@@ -251,7 +251,7 @@ def augumnted_data_fn(params, training):
                     img = front_img1.astype(np.uint8)
                     mask = pmask1.astype(np.uint8)
                     if len(mask.shape)==3:
-                        mask = mask[:,:,:0]
+                        mask = mask[:,:,0]
 
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
