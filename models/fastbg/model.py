@@ -38,6 +38,40 @@ def _coco_images(params):
         names.append(name)
     return names
 
+def _crop_back(img, size=160):
+    w = max(img.shape[1], size)
+    h = max(img.shape[0], size)
+    img = cv2.resize(img, (w, h))
+    x_shift = int(np.random.uniform(0, w - size))
+    y_shift = int(np.random.uniform(0, h - size))
+    return img[y_shift:y_shift + size, x_shift:x_shift + size, :]
+
+def mix_fb(front, back, mask, x_shift, y_shift,use_seamless):
+    w = mask.shape[1]
+    h = mask.shape[0]
+
+    rmask = np.zeros((160, 160, 1), np.float32)
+
+    if not use_seamless:
+        maskf = cv2.GaussianBlur(mask, (3, 3), 3)
+        maskf = maskf.astype(np.float32) / 255
+        maskf = np.reshape(maskf, (h, w, 1))
+        front = front.astype(np.float32) * maskf
+        back = back.astype(np.float32)
+        back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - maskf))
+        mask = np.reshape(mask, (h, w, 1))
+        mask = mask.astype(np.float32)
+    else:
+        mask = mask.astype(np.uint8)
+        mask = np.reshape(mask, (h, w))
+        center = (x_shift + front.shape[1] // 2, y_shift + front.shape[0] // 2)
+        front = front.astype(np.uint8)
+        back = cv2.seamlessClone(front, back, mask, center, cv2.MIXED_CLONE)
+        mask = mask.astype(np.float32)
+        mask = np.reshape(mask, (h, w, 1))
+    rmask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask
+    return back.astype(np.uint8), rmask.astype(np.uint8)
+
 def video_data_fn(params, training):
     import albumentations
     data_set = params['data_set']
@@ -48,13 +82,7 @@ def video_data_fn(params, training):
         img = data_set + '/images/' + img
         files[i] = (img, mask)
     coco_images = _coco_images(params)
-    def _crop_back(img, size=160):
-        w = max(img.shape[1], size)
-        h = max(img.shape[0], size)
-        img = cv2.resize(img, (w, h))
-        x_shift = int(np.random.uniform(0, w - size))
-        y_shift = int(np.random.uniform(0, h - size))
-        return img[y_shift:y_shift + size, x_shift:x_shift + size, :]
+
 
     def _pre_aug(p=0.5):
         return albumentations.Compose([
@@ -108,32 +136,6 @@ def video_data_fn(params, training):
         data = post_aug(**data)
         return data["image"]
 
-    def mix_fb(front, back, mask, x_shift, y_shift,use_seamless):
-        w = mask.shape[1]
-        h = mask.shape[0]
-
-        rmask = np.zeros((160, 160, 1), np.float32)
-
-        if not use_seamless:
-            maskf = cv2.GaussianBlur(mask, (3, 3), 3)
-            maskf = maskf.astype(np.float32) / 255
-            maskf = np.reshape(maskf, (h, w, 1))
-            front = front.astype(np.float32) * maskf
-            back = back.astype(np.float32)
-            back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - maskf))
-            mask = np.reshape(mask, (h, w, 1))
-            mask = mask.astype(np.float32)
-        else:
-            mask = mask.astype(np.uint8)
-            mask = np.reshape(mask, (h, w))
-            center = (x_shift + front.shape[1] // 2, y_shift + front.shape[0] // 2)
-            front = front.astype(np.uint8)
-            back = cv2.seamlessClone(front, back, mask, center, cv2.MIXED_CLONE)
-            mask = mask.astype(np.float32)
-            mask = np.reshape(mask, (h, w, 1))
-
-        rmask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask
-        return back.astype(np.uint8), rmask.astype(np.uint8)
 
     def _input_fn():
         def _generator():
@@ -232,33 +234,23 @@ def augumnted_data_fn(params, training):
                 mask = cv2.imread(i[1])[:,:,:]
                 if len(mask.shape)==3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask[mask>0] = 255
                 if np.random.uniform(0,1)>0.2:
-                    s = np.random.uniform(0.3,1)
+                    s = np.random.uniform(0.5, 1)
                     w0 = img.shape[1]
                     h0 = img.shape[0]
                     w = int(s * w0)
                     h = int(s * h0)
-                    front_img = cv2.resize(img, (w, h))
-                    pmask = cv2.resize(mask, (w, h))
-                    pmask = cv2.GaussianBlur(pmask, (3, 3), 3)
-                    pmask = pmask.astype(np.float32) / 255
-                    pmask = np.reshape(pmask, (h, w, 1))
-
-                    front_img = front_img.astype(np.float32)/255.0*pmask
+                    front_img1 = cv2.resize(img, (w, h))
+                    pmask1 = cv2.resize(mask, (w, h))
                     name = random.choice(coco_images)
-                    img = cv2.imread(name)[:,:,::-1]
-                    img = cv2.resize(img,(160,160))
-
+                    back_img = cv2.imread(name)[:, :, ::-1]
+                    back_img = _crop_back(back_img, 160)
                     x_shift = int(np.random.uniform(0, w0 - w))
                     y_shift = int(np.random.uniform(0, h0 - h))
-                    mask = np.zeros((160, 160, 1), np.float32)
-                    img = img.astype(np.float32) / 255
-                    img[y_shift:y_shift + h, x_shift:x_shift + w, :] = front_img + (
-                                img[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - pmask))
-                    mask[y_shift:y_shift + h, x_shift:x_shift + w, :] = pmask
-                    img = (img * 255).astype(np.uint8)
-                    mask = (mask*255).astype(np.uint8)
+                    front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift, False)
+                    img = front_img1.astype(np.uint8)
+                    if len(mask.shape)==3:
+                        mask = pmask1.astype(np.uint8)[:,:,:0]
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
