@@ -325,13 +325,13 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
     refines=[]
     for i in range(len(features_definition)):
         k = features_definition[i]
-        f = all_features[:,:,prev:k]
+        f = all_features[:,:,:,prev:k]
         if i==0:
             features = f
         else:
             if k==0:
                 continue
-            refines.append(all_features[:,:,prev:k])
+            refines.append(all_features[:,:,:,prev:k])
         prev = k
 
     training = (mode == tf.estimator.ModeKeys.TRAIN)
