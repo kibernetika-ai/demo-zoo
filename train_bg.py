@@ -6,6 +6,7 @@ import logging
 from models.fastbg.model import FastBGNet
 from models.fastbg.model import data_fn
 from models.fastbg.model import augumnted_data_fn
+from models.fastbg.model import video_data_fn
 from mlboardclient.api import client
 
 import os
@@ -96,10 +97,13 @@ def export(checkpoint_dir, params):
         model_dir=checkpoint_dir,
     )
     params['batch_size'] = 1
+    features_def = [int(i) for i in task.exec_info.get('features','3').split(',')]
+    params['features'] = features_def
     feature_placeholders = {
-        'image': tf.placeholder(tf.float32, [1, None, None, 3], name='image'),
+        'image': tf.placeholder(tf.float32, [1, None, None, sum(features_def)], name='image'),
     }
     receiver = tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholders)
+    params['features'] = [int(i) for i in params['features'].split(',')]
     net = FastBGNet(
         params=params,
         model_dir=checkpoint_dir,
@@ -125,6 +129,7 @@ def export(checkpoint_dir, params):
     model_name = 'person-mask'
     m.model_upload(model_name, version, export_dir, spec=serving_spec())
     client.update_task_info({'model_path': export_path, 'num-chans': params['num_chans'],
+                             'features':','.join([str(i) for i in features_def]),
                              'num-pools': params['num_pools'], 'resolution': params['resolution'],
                              'model_reference': catalog_ref(model_name, 'mlmodel', version)})
 
@@ -149,7 +154,10 @@ def train(mode, checkpoint_dir, params):
         epoch_len, fn = data_fn(params, mode == 'train')
     else:
         logging.info('Use Coco')
-        epoch_len, fn = augumnted_data_fn(params, mode == 'train')
+        if len(params['features']<2):
+            epoch_len, fn = augumnted_data_fn(params, mode == 'train')
+        else:
+            epoch_len, fn = video_data_fn(params, mode == 'train')
     logging.info('Samples count: {}'.format(epoch_len))
     params['epoch_len'] = epoch_len
     net = FastBGNet(
@@ -201,6 +209,7 @@ def main(args):
         'optimizer': args.optimizer,
         'loss': args.loss,
         'coco': args.coco,
+        'features': [int(i) for i in args.features.split(',')]
     }
     if args.export:
         export(args.checkpoint_dir, params)
@@ -219,6 +228,7 @@ def main(args):
             'weight-decay': args.weight_decay,
             'checkpoint_path': str(args.checkpoint_dir),
             'resolution': args.resolution,
+            'features': args.features,
         })
         train('train', args.checkpoint_dir, params)
     else:
@@ -270,6 +280,8 @@ def create_arg_parser():
                         help='Path to the dataset')
     parser.add_argument('--coco', type=str, default=None,
                         help='Coco path')
+    parser.add_argument('--features', type=str, default='3',
+                        help='features defention')
     parser.add_argument(
         '--save_summary_steps',
         type=int,

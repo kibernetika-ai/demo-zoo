@@ -13,6 +13,168 @@ import numpy as np
 import cv2
 import random
 
+def _coco_images(params):
+    coco_dir = params['coco']
+    with open(coco_dir + '/annotations/instances_train2017.json') as f:
+        coco_data = json.load(f)
+    coco_data = coco_data['annotations']
+    coco_images = {}
+    people = {}
+    for a in coco_data:
+        i_id = a['image_id']
+        if a['category_id'] != 1:
+            if i_id in people:
+                continue
+            else:
+                coco_images[i_id] = True
+        else:
+            if i_id in coco_images:
+                del coco_images[i_id]
+            people[i_id] = True
+    del people
+    names = []
+    for k in coco_images.keys():
+        name = '{}/train2017/{:012d}.jpg'.format(coco_dir, int(k))
+        names.append(name)
+    return names
+
+def video_data_fn(params, training):
+    import albumentations
+    data_set = params['data_set']
+    files = glob.glob(data_set + '/masks/*.*')
+    for i in range(len(files)):
+        mask = files[i]
+        img = os.path.basename(mask)
+        img = data_set + '/images/' + img
+        files[i] = (img, mask)
+    coco_images = _coco_images(params)
+    def _crop_back(img, size=160):
+        w = max(img.shape[1], size)
+        h = max(img.shape[0], size)
+        img = cv2.resize(img, (w, h))
+        x_shift = int(np.random.uniform(0, w - size))
+        y_shift = int(np.random.uniform(0, h - size))
+        return img[y_shift:y_shift + size, x_shift:x_shift + size, :]
+
+    def _pre_aug(p=0.5):
+        return albumentations.Compose([
+            albumentations.HorizontalFlip(),
+            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=15, p=0.8),
+            albumentations.GridDistortion(distort_limit=0.3, p=0.3),
+            albumentations.OneOf([
+                albumentations.MotionBlur(p=0.5),
+                albumentations.Blur(blur_limit=3, p=0.2),
+            ], p=0.2),
+            albumentations.OneOf([
+                albumentations.CLAHE(clip_limit=2),
+                albumentations.IAASharpen(),
+                albumentations.IAAEmboss(),
+            ], p=0.3),
+            albumentations.OneOf([
+                albumentations.RandomBrightnessContrast(p=0.3),
+            ], p=0.4),
+            albumentations.HueSaturationValue(p=0.3),
+        ], p=p)
+
+    def _move_aug(p=0.5):
+        return albumentations.Compose([
+            albumentations.ShiftScaleRotate(shift_limit=0, scale_limit=0, rotate_limit=10, p=0.9),
+            albumentations.GridDistortion(distort_limit=0.08, p=0.7)
+        ], p=p)
+
+    def _post_aug(p=0.5):
+        return albumentations.Compose([
+            albumentations.OneOf([
+                albumentations.MotionBlur(p=0.5),
+            ], p=0.2)
+        ], p=p)
+
+    pre_aug = _pre_aug(p=1)
+    move_aug = _move_aug(p=1)
+    post_aug = _post_aug(p=1)
+
+    def make_pre_aug(img, mask):
+        data = {"image": img, "mask": mask}
+        data = pre_aug(**data)
+        return data["image"], data["mask"]
+
+    def make_move_aug(img, mask):
+        data = {"image": img, "mask": mask}
+        data = move_aug(**data)
+        return data["image"], data["mask"]
+
+    def make_post_aug(img):
+        data = {"image": img}
+        data = post_aug(**data)
+        return data["image"]
+
+    def mix_fb(front, back, mask, x_shift, y_shift):
+        w = mask.shape[1]
+        h = mask.shape[0]
+        mask = cv2.GaussianBlur(mask, (3, 3), 3)
+        mask = mask.astype(np.float32) / 255
+        mask = np.reshape(mask, (h, w, 1))
+        front = front.astype(np.float32) * mask
+        rmask = np.zeros((160, 160, 1), np.float32)
+        back = back.astype(np.float32)
+        back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (
+                back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - mask))
+        rmask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask * 255
+        return back.astype(np.uint8), rmask.astype(np.uint8)
+
+    def _input_fn():
+        def _generator():
+            for i in files:
+                pre_img = cv2.imread(i[0])[:, :, ::-1]
+                pre_mask = cv2.imread(i[1])[:, :, :]
+                if len(pre_mask.shape) == 3:
+                    pre_mask = cv2.cvtColor(pre_mask, cv2.COLOR_BGR2GRAY)
+                pre_img, pre_mask = make_pre_aug(pre_img, pre_mask)
+                s = np.random.uniform(0.5, 1)
+                w0 = pre_img.shape[1]
+                h0 = pre_img.shape[0]
+                w = int(s * w0)
+                h = int(s * h0)
+                front_img1 = cv2.resize(pre_img, (w, h))
+                pmask1 = cv2.resize(pre_mask, (w, h))
+                front_img0, pmask0 = make_move_aug(front_img1, pmask1)
+                name = random.choice(coco_images)
+                back_img = cv2.imread(name)[:, :, ::-1]
+                back_img = _crop_back(back_img, 160)
+                x_shift = int(np.random.uniform(0, w0 - w))
+                y_shift = int(np.random.uniform(0, h0 - h))
+                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift)
+                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift)
+                front_img1 = make_post_aug(front_img1)
+                front_img0 = make_post_aug(front_img0)
+
+                thresh = cv2.cvtColor(front_img1, cv2.COLOR_BGR2GRAY)
+                thresh = cv2.medianBlur(thresh, 3)
+                thresh = cv2.adaptiveThreshold(thresh, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+                thresh = cv2.medianBlur(thresh, 3)
+                thresh = np.reshape(thresh, (front_img1.shape[0], front_img1.shape[1], 1))
+                thresh = thresh.astype(np.float32) / 255
+
+                front_img1 = front_img1.astype(np.float32) / 255
+                front_img0 = front_img0.astype(np.float32) / 255
+
+                pmask1 = pmask1.astype(np.float32) / 255
+                img = np.concatenate([front_img1, front_img0, thresh], axis=2)
+                yield img, pmask1
+
+        ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
+                                            (tf.TensorShape([160, 160, 7]), tf.TensorShape([160, 160, 1])))
+        if training:
+            ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
+        if training:
+            ds = ds.repeat(params['num_epochs'])
+
+        ds = ds.batch(params['batch_size'], True)
+
+        return ds
+
+    return len(files) // params['batch_size'], _input_fn
+
 
 def augumnted_data_fn(params, training):
     import albumentations
@@ -49,25 +211,7 @@ def augumnted_data_fn(params, training):
         img = os.path.basename(mask)
         img = data_set + '/images/' + img
         files[i] = (img, mask)
-    coco_dir = params['coco']
-    with open(coco_dir+'/annotations/instances_train2017.json') as f:
-        coco_data = json.load(f)
-    coco_data = coco_data['annotations']
-    coco_images = {}
-    people = {}
-    for a in coco_data:
-        i_id = a['image_id']
-        if a['category_id'] != 1:
-            if i_id in people:
-                continue
-            else:
-                coco_images[i_id] = True
-        else:
-            if i_id in coco_images:
-                del coco_images[i_id]
-            people[i_id] = True
-    del people
-    coco_images = list(coco_images.keys())
+    coco_images = _coco_images(params)
     def _input_fn():
         def _generator():
             for i in files:
@@ -89,7 +233,7 @@ def augumnted_data_fn(params, training):
                     pmask = np.reshape(pmask, (h, w, 1))
 
                     front_img = front_img.astype(np.float32)/255.0*pmask
-                    name = '{}/train2017/{:012d}.jpg'.format(coco_dir,int(random.choice(coco_images)))
+                    name = random.choice(coco_images)
                     img = cv2.imread(name)[:,:,::-1]
                     img = cv2.resize(img,(160,160))
 
@@ -168,14 +312,32 @@ def data_fn(params, training):
 
 
 def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=None):
+    features_definition = params['features']
+    if features_definition is None or len(features_definition)==0:
+        features_definition = [3]
     if mode == tf.estimator.ModeKeys.PREDICT:
-        features = features['image']
+        all_features = features['image']
     else:
-        features = tf.reshape(features, [params['batch_size'], params['resolution'], params['resolution'], 3])
+        feature_chans = sum(features_definition)
+        all_features = tf.reshape(features, [params['batch_size'], params['resolution'], params['resolution'], feature_chans])
+
+    prev = 0
+    refines=[]
+    for i in range(len(features_definition)):
+        k = features_definition[i]
+        f = all_features[:,:,prev:k]
+        if i==0:
+            features = f
+        else:
+            if k==0:
+                continue
+            refines.append(all_features[:,:,prev:k])
+        prev = k
+
     training = (mode == tf.estimator.ModeKeys.TRAIN)
     out_chans = 2 if params['loss'] == 'entropy' else 1
     # inputs, out_chans, chans, drop_prob, num_pool_layers, training = True
-    logits = unet(features, out_chans, params['num_chans'], params['drop_prob'], params['num_pools'], training=training)
+    logits = unet(features, out_chans, params['num_chans'], params['drop_prob'], params['num_pools'],refines=refines,training=training)
     if params['loss'] == 'entropy':
         mask = tf.cast(tf.argmax(logits, axis=3), tf.float32)
         logging.info('Mask shape1: {}'.format(mask.shape))

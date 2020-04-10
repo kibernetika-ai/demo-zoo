@@ -35,11 +35,30 @@ def upnet(name, output, num_pool_layers, down_sample_layers, ch, drop_prob, trai
         if i < (num_pool_layers - 1):
             ch //= 2
         output = conv_block(output, ch, drop_prob, 'up{}_{}'.format(name, i + 1), False, training)
+
+
     return output
 
 
-def unet(inputs, out_chans, chans, drop_prob, num_pool_layers, training=True):
+def blend(out,outs,drop_prob,training):
+    blend = []
+    _, w, h, f = out.shape
+    for i,r in enumerate(outs):
+        l = tf.concat([out,r],3)
+        blend.append(conv_block(l,f,drop_prob,f'r{i}_combine',False,training))
+    l = tf.concat(blend, 3)
+    return conv_block(l,f,drop_prob,f'r{i}_combine',False,training)
+
+
+def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], training=True):
     output, pull = conv_block(inputs, chans, drop_prob, 'down_1', True, training)
+    r_down_sample_layers = []
+    r_pulls = []
+    for rindex,r in enumerate(refines):
+        r_output, r_pull = conv_block(r, chans, drop_prob, f'r{rindex}_down_1', True, training)
+        r_down_sample_layers.append([r_output])
+        r_pulls.append(r_pull)
+
     logging.info('Down_1 - {}'.format(output.shape))
     down_sample_layers = [output]
     ch = chans
@@ -48,10 +67,22 @@ def unet(inputs, out_chans, chans, drop_prob, num_pool_layers, training=True):
         output, pull = conv_block(pull, ch, drop_prob, 'down_{}'.format(i + 2), True, training)
         logging.info('Down_{} - {}'.format(i + 2, output.shape))
         down_sample_layers += [output]
+        for rindex,r in enumerate(refines):
+            r_output, r_pull = conv_block(r_pulls[rindex], ch, drop_prob, 'r{}_down_{}'.format(rindex,i + 2), True, training)
+            r_pulls[rindex] = r_pull
+            r_down_sample_layers[rindex].append(r_output)
     i += 1
 
     final_down = conv_block(pull, ch, drop_prob, 'down_{}'.format(i + 2), False, training)
-    logging.info('Down_{} - {}'.format(i + 2, output.shape))
+    r_final_down = []
+    for rindex, r in enumerate(refines):
+        r_final_down.append(conv_block(r_pulls[rindex], ch, drop_prob, 'r{}_down_{}'.format(rindex,i + 2), False, training))
+
+    final_down = blend(final_down,r_final_down,drop_prob,training)
+    for rindex in range(len(down_sample_layers)):
+        down_sample_layers[rindex] = blend(down_sample_layers[rindex],r_down_sample_layers[rindex],drop_prob,training)
+
+    logging.info('Down_{} - {}'.format(i + 2, final_down.shape))
 
     output = upnet('', final_down, num_pool_layers, down_sample_layers, ch, drop_prob, training)
     output = tf.layers.conv2d(output, chans, kernel_size=1, padding='same', name="conv_1")
