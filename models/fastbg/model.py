@@ -18,6 +18,7 @@ import random
 
 unknown_code = 128
 
+
 def generate_weight(mask):
     weight = mask.astype(np.uint8)
     weight = np.reshape(weight, (weight.shape[0], weight.shape[1]))
@@ -29,6 +30,7 @@ def generate_weight(mask):
     weight[trimap == unknown_code] = 2
     return np.reshape(weight, (weight.shape[0], weight.shape[1], 1))
 
+
 def generate_trimap(alpha):
     trimap = np.copy(alpha)
     k_size = 5
@@ -36,6 +38,7 @@ def generate_trimap(alpha):
                                                                                                       size=(k_size,
                                                                                                             k_size))) != 0)] = unknown_code
     return trimap
+
 
 def _coco_images(params):
     coco_dir = params['coco']
@@ -62,6 +65,7 @@ def _coco_images(params):
         names.append(name)
     return names
 
+
 def _crop_back(img, size=160):
     w = max(img.shape[1], size)
     h = max(img.shape[0], size)
@@ -70,7 +74,8 @@ def _crop_back(img, size=160):
     y_shift = int(np.random.uniform(0, h - size))
     return img[y_shift:y_shift + size, x_shift:x_shift + size, :]
 
-def mix_fb(front, back, mask, x_shift, y_shift,use_seamless):
+
+def mix_fb(front, back, mask, x_shift, y_shift, use_seamless):
     w = mask.shape[1]
     h = mask.shape[0]
 
@@ -82,7 +87,8 @@ def mix_fb(front, back, mask, x_shift, y_shift,use_seamless):
         maskf = np.reshape(maskf, (h, w, 1))
         front = front.astype(np.float32) * maskf
         back = back.astype(np.float32)
-        back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - maskf))
+        back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (
+                    back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - maskf))
         mask = np.reshape(mask, (h, w, 1))
         mask = mask.astype(np.float32)
     else:
@@ -96,6 +102,7 @@ def mix_fb(front, back, mask, x_shift, y_shift,use_seamless):
     rmask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask
     return back.astype(np.uint8), rmask.astype(np.uint8)
 
+
 def video_data_fn(params, training):
     import albumentations
     data_set = params['data_set']
@@ -106,7 +113,6 @@ def video_data_fn(params, training):
         img = data_set + '/images/' + img
         files[i] = (img, mask)
     coco_images = _coco_images(params)
-
 
     def _pre_aug(p=0.5):
         return albumentations.Compose([
@@ -160,7 +166,6 @@ def video_data_fn(params, training):
         data = post_aug(**data)
         return data["image"]
 
-
     def _input_fn():
         def _generator():
             for i in files:
@@ -183,8 +188,8 @@ def video_data_fn(params, training):
                 back_img = _crop_back(back_img, 160)
                 x_shift = int(np.random.uniform(0, w0 - w))
                 y_shift = int(np.random.uniform(0, h0 - h))
-                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift,False)
-                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift,False)
+                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift, False)
+                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift, False)
                 front_img1 = make_post_aug(front_img1)
                 front_img0 = make_post_aug(front_img0)
                 thresh = cv2.cvtColor(front_img1, cv2.COLOR_BGR2GRAY)
@@ -200,10 +205,10 @@ def video_data_fn(params, training):
                 weight = generate_weight(pmask1)
                 pmask1 = pmask1.astype(np.float32) / 255
                 img = np.concatenate([front_img1, front_img0, thresh], axis=2)
-                yield img, np.concatenate([pmask1,weight],axis=2)
+                yield img, np.concatenate([pmask1, weight], axis=2)
 
         ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
-                                            (tf.TensorShape([160, 160, 7]), tf.TensorShape([160, 160, 1])))
+                                            (tf.TensorShape([160, 160, 7]), tf.TensorShape([160, 160, 2])))
         if training:
             ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
         if training:
@@ -239,7 +244,7 @@ def augumnted_data_fn(params, training):
             ], p=0.3),
             albumentations.OneOf([
                 albumentations.RandomBrightnessContrast(p=0.3),
-                ],p=0.4),
+            ], p=0.4),
             albumentations.HueSaturationValue(p=0.3),
         ], p=p)
 
@@ -252,15 +257,16 @@ def augumnted_data_fn(params, training):
         img = data_set + '/images/' + img
         files[i] = (img, mask)
     coco_images = _coco_images(params)
+
     def _input_fn():
         def _generator():
             for i in files:
-                img = cv2.imread(i[0])[:,:,::-1]
-                mask = cv2.imread(i[1])[:,:,:]
-                if len(mask.shape)==3:
+                img = cv2.imread(i[0])[:, :, ::-1]
+                mask = cv2.imread(i[1])[:, :, :]
+                if len(mask.shape) == 3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-                mask = cv2.medianBlur(mask,3)
-                if np.random.uniform(0,1)>0.2:
+                mask = cv2.medianBlur(mask, 3)
+                if np.random.uniform(0, 1) > 0.2:
                     s = np.random.uniform(0.5, 1)
                     w0 = img.shape[1]
                     h0 = img.shape[0]
@@ -276,20 +282,20 @@ def augumnted_data_fn(params, training):
                     front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift, False)
                     img = front_img1.astype(np.uint8)
                     mask = pmask1.astype(np.uint8)
-                    if len(mask.shape)==3:
-                        mask = mask[:,:,0]
+                    if len(mask.shape) == 3:
+                        mask = mask[:, :, 0]
 
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
-                mask = np.reshape(mask,(160,160,1))
+                mask = np.reshape(mask, (160, 160, 1))
                 weight = generate_weight(mask)
-                img = img.astype(np.float32)/255
-                mask = mask.astype(np.float32)/255
-                yield img, np.concatenate([mask,weight],axis=2)
+                img = img.astype(np.float32) / 255
+                mask = mask.astype(np.float32) / 255
+                yield img, np.concatenate([mask, weight], axis=2)
 
         ds = tf.data.Dataset.from_generator(_generator, (tf.float32, tf.float32),
-                                            (tf.TensorShape([160, 160, 3]),tf.TensorShape([160, 160, 1])))
+                                            (tf.TensorShape([160, 160, 3]), tf.TensorShape([160, 160, 2])))
         if training:
             ds = ds.shuffle(params['batch_size'] * 2, reshuffle_each_iteration=True)
         if training:
@@ -300,6 +306,7 @@ def augumnted_data_fn(params, training):
         return ds
 
     return len(files) // params['batch_size'], _input_fn
+
 
 def data_fn(params, training):
     data_set = params['data_set']
@@ -320,8 +327,8 @@ def data_fn(params, training):
             img = tf.image.decode_image(img)
             mask = tf.read_file(a[1])
             mask = tf.image.decode_image(mask)
-            img = tf.expand_dims(img,0)
-            mask = tf.expand_dims(mask,0)
+            img = tf.expand_dims(img, 0)
+            mask = tf.expand_dims(mask, 0)
             img = tf.image.resize_bilinear(img, [resolution, resolution])
             mask = tf.image.resize_bilinear(mask, [resolution, resolution])
             logging.info('img: {}'.format(img.shape))
@@ -347,33 +354,35 @@ def data_fn(params, training):
 
 def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=None):
     features_definition = params['features']
-    if features_definition is None or len(features_definition)==0:
+    if features_definition is None or len(features_definition) == 0:
         features_definition = [3]
     if mode == tf.estimator.ModeKeys.PREDICT:
         all_features = features['image']
     else:
         feature_chans = sum(features_definition)
-        all_features = tf.reshape(features, [params['batch_size'], params['resolution'], params['resolution'], feature_chans])
+        all_features = tf.reshape(features,
+                                  [params['batch_size'], params['resolution'], params['resolution'], feature_chans])
 
     prev = 0
-    refines=[]
+    refines = []
     for i in range(len(features_definition)):
         k = features_definition[i]
-        if k==0:
+        if k == 0:
             continue
-        f = all_features[:,:,:,prev:k+prev]
-        if i==0:
+        f = all_features[:, :, :, prev:k + prev]
+        if i == 0:
             features = f
             logging.info('Features: {}'.format(f.shape))
         else:
-            logging.info('Features {}: {}'.format(i,f.shape))
+            logging.info('Features {}: {}'.format(i, f.shape))
             refines.append(f)
-        prev = k+prev
+        prev = k + prev
 
     training = (mode == tf.estimator.ModeKeys.TRAIN)
     out_chans = 2 if params['loss'] == 'entropy' else 1
     # inputs, out_chans, chans, drop_prob, num_pool_layers, training = True
-    logits = unet(features, out_chans, params['num_chans'], params['drop_prob'], params['num_pools'],refines=refines,training=training)
+    logits = unet(features, out_chans, params['num_chans'], params['drop_prob'], params['num_pools'], refines=refines,
+                  training=training)
     if params['loss'] == 'entropy':
         mask = tf.cast(tf.argmax(logits, axis=3), tf.float32)
         logging.info('Mask shape1: {}'.format(mask.shape))
@@ -381,10 +390,10 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
         logging.info('Mask shape2: {}'.format(mask.shape))
     else:
         mask = tf.sigmoid(logits)
-    logging.info('Features: {}'.format(features.shape))
+    logging.info('GRAPH: Features: {}'.format(features.shape))
     if labels is not None:
-        logging.info('Lables: {}'.format(labels.shape))
-    logging.info('mask: {}'.format(mask.shape))
+        logging.info('GRAPH: Lables: {}'.format(labels.shape))
+    logging.info('GRAPH: mask: {}'.format(mask.shape))
     loss = None
     train_op = None
     hooks = []
@@ -396,8 +405,8 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
         learning_rate_var = tf.Variable(float(params['lr']), trainable=False, name='lr',
                                         collections=[tf.GraphKeys.LOCAL_VARIABLES])
 
-        weights = labels[:,:,1:]
-        labels = labels[:, :, 0:1]
+        weights = labels[:, :, :, 1:]
+        labels = labels[:, :, :, 0:1]
         flabels = tf.cast(labels, tf.float32)
         if params['loss'] == 'entropy':
             llabels = tf.cast(labels, tf.int32)
@@ -408,10 +417,10 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
             original = features * flabels
             predicted = features * mask
             loss_content = tf.losses.absolute_difference(original, predicted)
-            mask_loss = tf.losses.mean_squared_error(flabels, mask,weights=weights)
+            mask_loss = tf.losses.mean_squared_error(flabels, mask, weights=weights)
             loss = (loss_content + mask_loss) * 0.5
         else:
-            loss = tf.losses.absolute_difference(flabels, mask,weights=weights)
+            loss = tf.losses.absolute_difference(flabels, mask, weights=weights)
         mse = tf.losses.mean_squared_error(flabels, mask)
         nmse = tf.norm(flabels - mask) ** 2 / tf.norm(flabels) ** 2
 
