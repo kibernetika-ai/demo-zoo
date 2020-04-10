@@ -334,7 +334,7 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
         else:
             logging.info('Features {}: {}'.format(i,f.shape))
             refines.append(f)
-        prev = k
+        prev = k+prev
 
     training = (mode == tf.estimator.ModeKeys.TRAIN)
     out_chans = 2 if params['loss'] == 'entropy' else 1
