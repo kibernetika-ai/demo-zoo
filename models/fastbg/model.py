@@ -168,6 +168,7 @@ def video_data_fn(params, training):
                 pre_mask = cv2.imread(i[1])[:, :, :]
                 if len(pre_mask.shape) == 3:
                     pre_mask = cv2.cvtColor(pre_mask, cv2.COLOR_BGR2GRAY)
+                pre_mask = cv2.medianBlur(pre_mask, 3)
                 pre_img, pre_mask = make_pre_aug(pre_img, pre_mask)
                 s = np.random.uniform(0.5, 1)
                 w0 = pre_img.shape[1]
@@ -258,6 +259,7 @@ def augumnted_data_fn(params, training):
                 mask = cv2.imread(i[1])[:,:,:]
                 if len(mask.shape)==3:
                     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+                mask = cv2.medianBlur(mask,3)
                 if np.random.uniform(0,1)>0.2:
                     s = np.random.uniform(0.5, 1)
                     w0 = img.shape[1]
