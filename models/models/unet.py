@@ -58,9 +58,9 @@ def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], traini
     for rindex,r in enumerate(refines):
         r_output, r_pull = conv_block(r, chans, drop_prob, f'r{rindex}_down_1', True, training)
         logging.info('R{} Down_1 - {}'.format(rindex,r_output.shape))
-        r_down_sample_layers.append([r_output])
+        r_down_sample_layers.append(r_output)
         r_pulls.append(r_pull)
-
+    r_down_sample_layers = [r_down_sample_layers]
     logging.info('Down_1 - {}'.format(output.shape))
     down_sample_layers = [output]
     ch = chans
@@ -69,11 +69,13 @@ def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], traini
         output, pull = conv_block(pull, ch, drop_prob, 'down_{}'.format(i + 2), True, training)
         logging.info('Down_{} - {}'.format(i + 2, output.shape))
         down_sample_layers += [output]
+        layers = []
         for rindex in range(len(refines)):
             r_output, r_pull = conv_block(r_pulls[rindex], ch, drop_prob, 'r{}_down_{}'.format(rindex,i + 2), True, training)
             logging.info('R{} Down_{}- {}'.format(rindex,i+2, r_output.shape))
             r_pulls[rindex] = r_pull
-            r_down_sample_layers[rindex].append(r_output)
+            layers.append(r_output)
+        r_down_sample_layers.append(layers)
     i += 1
 
     final_down = conv_block(pull, ch, drop_prob, 'down_{}'.format(i + 2), False, training)
