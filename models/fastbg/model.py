@@ -111,21 +111,27 @@ def video_data_fn(params, training):
     def mix_fb(front, back, mask, x_shift, y_shift,use_seamless):
         w = mask.shape[1]
         h = mask.shape[0]
-        mask = cv2.GaussianBlur(mask, (3, 3), 3)
-        mask = mask.astype(np.float32) / 255
-        mask = np.reshape(mask, (h, w, 1))
-        front = front.astype(np.float32) * mask
+
         rmask = np.zeros((160, 160, 1), np.float32)
 
         if not use_seamless:
+            mask = cv2.GaussianBlur(mask, (3, 3), 3)
+            mask = mask.astype(np.float32) / 255
+            mask = np.reshape(mask, (h, w, 1))
+            front = front.astype(np.float32) * mask
             back = back.astype(np.float32)
             back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - mask))
+            mask = mask*255
         else:
+            mask = mask.astype(np.uint8)
+            mask = np.reshape(mask, (h, w))
             center = (x_shift + front.shape[1] // 2, y_shift + front.shape[0] // 2)
             front = front.astype(np.uint8)
-            back = cv2.seamlessClone(front, back, np.ones_like(front) * 255, center, cv2.NORMAL_CLONE)
+            back = cv2.seamlessClone(front, back, mask, center, cv2.MIXED_CLONE)
+            mask = mask.astype(np.float32)
+            mask = np.reshape(mask, (h, w, 1))
 
-        rmask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask * 255
+        rmask[y_shift:y_shift + h, x_shift:x_shift + w, :] = mask
         return back.astype(np.uint8), rmask.astype(np.uint8)
 
     def _input_fn():
