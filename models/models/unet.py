@@ -4,6 +4,7 @@ import logging
 
 def conv_block(input, out_chans, drop_prob, name, pooling, training,kernel_size=3):
     with tf.variable_scope("layer_{}".format(name)):
+        logging.info('{} KernelSize={}'.format(name,kernel_size))
         out = input
         for j in range(2):
             out = tf.layers.conv2d(out, out_chans, kernel_size=kernel_size, padding='same', name="conv_{}".format(j + 1))
@@ -43,7 +44,7 @@ def upnet(name, output, num_pool_layers, down_sample_layers, ch, drop_prob, trai
 def blend(ci,out,outs,drop_prob,training):
     if len(outs)==0:
         return out
-    blends = []
+    blends = [out]
     _, w, h, f = out.shape
     for i,r in enumerate(outs):
         logging.info('Blen {}: {}'.format(i,r.shape))
