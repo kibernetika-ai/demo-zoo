@@ -98,12 +98,12 @@ def export(checkpoint_dir, params):
     )
     params['batch_size'] = 1
     features_def = [int(i) for i in task.exec_info.get('features','3').split(',')]
+    logging.info('Features Def: {}'.format(features_def))
     params['features'] = features_def
     feature_placeholders = {
         'image': tf.placeholder(tf.float32, [1, None, None, sum(features_def)], name='image'),
     }
     receiver = tf.estimator.export.build_raw_serving_input_receiver_fn(feature_placeholders)
-    params['features'] = [int(i) for i in params['features'].split(',')]
     net = FastBGNet(
         params=params,
         model_dir=checkpoint_dir,
