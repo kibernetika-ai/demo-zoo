@@ -41,6 +41,8 @@ def upnet(name, output, num_pool_layers, down_sample_layers, ch, drop_prob, trai
 
 
 def blend(ci,out,outs,drop_prob,training):
+    if len(outs)==0:
+        return out
     blends = []
     _, w, h, f = out.shape
     for i,r in enumerate(outs):
