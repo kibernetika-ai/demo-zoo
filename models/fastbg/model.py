@@ -249,8 +249,10 @@ def augumnted_data_fn(params, training):
                     y_shift = int(np.random.uniform(0, h0 - h))
                     front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift, False)
                     img = front_img1.astype(np.uint8)
+                    mask = pmask1.astype(np.uint8)
                     if len(mask.shape)==3:
-                        mask = pmask1.astype(np.uint8)[:,:,:0]
+                        mask = mask[:,:,:0]
+
                 data = {"image": img, "mask": mask}
                 augmented = augmentation(**data)
                 img, mask = augmented["image"], augmented["mask"]
