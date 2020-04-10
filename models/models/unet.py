@@ -41,12 +41,13 @@ def upnet(name, output, num_pool_layers, down_sample_layers, ch, drop_prob, trai
 
 
 def blend(out,outs,drop_prob,training):
-    blend = []
+    blends = []
     _, w, h, f = out.shape
     for i,r in enumerate(outs):
+        logging.info('Blen {}: {}'.format(i,r.shape))
         l = tf.concat([out,r],3)
-        blend.append(conv_block(l,f,drop_prob,f'r{i}_combine',False,training))
-    l = tf.concat(blend, 3)
+        blends.append(conv_block(l,f,drop_prob,f'r{i}_combine',False,training))
+    l = tf.concat(blends, 3)
     return conv_block(l,f,drop_prob,f'r{i}_combine',False,training)
 
 
