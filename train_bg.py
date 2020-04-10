@@ -153,8 +153,8 @@ def train(mode, checkpoint_dir, params):
         logging.info('Use generic')
         epoch_len, fn = data_fn(params, mode == 'train')
     else:
-        logging.info('Use Coco')
-        if len(params['features']<2):
+        logging.info('Use Coco: {}'.format(params['features']))
+        if len(params['features'])<2:
             epoch_len, fn = augumnted_data_fn(params, mode == 'train')
         else:
             epoch_len, fn = video_data_fn(params, mode == 'train')
