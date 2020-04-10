@@ -48,7 +48,7 @@ def blend(ci,out,outs,drop_prob,training):
         l = tf.concat([out,r],3)
         blends.append(conv_block(l,f,drop_prob,f'c{ci}_r{i}_combine',False,training))
     l = tf.concat(blends, 3)
-    return conv_block(l,f,drop_prob,f'c{ci}_r{i}_select_combine',False,training)
+    return conv_block(l,f,drop_prob,f'c{ci}_select_combine',False,training)
 
 
 def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], training=True):
