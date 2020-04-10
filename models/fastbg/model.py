@@ -115,13 +115,14 @@ def video_data_fn(params, training):
         rmask = np.zeros((160, 160, 1), np.float32)
 
         if not use_seamless:
-            mask = cv2.GaussianBlur(mask, (3, 3), 3)
-            mask = mask.astype(np.float32) / 255
-            mask = np.reshape(mask, (h, w, 1))
-            front = front.astype(np.float32) * mask
+            maskf = cv2.GaussianBlur(mask, (3, 3), 3)
+            maskf = maskf.astype(np.float32) / 255
+            maskf = np.reshape(maskf, (h, w, 1))
+            front = front.astype(np.float32) * maskf
             back = back.astype(np.float32)
-            back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - mask))
-            mask = mask*255
+            back[y_shift:y_shift + h, x_shift:x_shift + w, :] = front + (back[y_shift:y_shift + h, x_shift:x_shift + w, :] * (1 - maskf))
+            mask = np.reshape(mask, (h, w, 1))
+            mask = mask.astype(np.float32)
         else:
             mask = mask.astype(np.uint8)
             mask = np.reshape(mask, (h, w))
@@ -155,8 +156,8 @@ def video_data_fn(params, training):
                 back_img = _crop_back(back_img, 160)
                 x_shift = int(np.random.uniform(0, w0 - w))
                 y_shift = int(np.random.uniform(0, h0 - h))
-                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift,True)
-                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift,True)
+                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift,False)
+                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift,False)
                 front_img1 = make_post_aug(front_img1)
                 front_img0 = make_post_aug(front_img0)
 
