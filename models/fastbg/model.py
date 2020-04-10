@@ -325,13 +325,13 @@ def _unet_model_fn(features, labels, mode, params=None, config=None, model_dir=N
     refines=[]
     for i in range(len(features_definition)):
         k = features_definition[i]
-        f = all_features[:,:,:,prev:k]
+        if k==0:
+            continue
+        f = all_features[:,:,:,prev:k+prev]
         if i==0:
             features = f
             logging.info('Features: {}'.format(f.shape))
         else:
-            if k==0:
-                continue
             logging.info('Features {}: {}'.format(i,f.shape))
             refines.append(f)
         prev = k
