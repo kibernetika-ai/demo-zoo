@@ -149,8 +149,8 @@ def video_data_fn(params, training):
                 back_img = _crop_back(back_img, 160)
                 x_shift = int(np.random.uniform(0, w0 - w))
                 y_shift = int(np.random.uniform(0, h0 - h))
-                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift)
-                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift)
+                front_img1, pmask1 = mix_fb(front_img1, back_img, pmask1, x_shift, y_shift,True)
+                front_img0, pmask0 = mix_fb(front_img0, back_img, pmask0, x_shift, y_shift,True)
                 front_img1 = make_post_aug(front_img1)
                 front_img0 = make_post_aug(front_img0)
 
