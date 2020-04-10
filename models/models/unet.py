@@ -40,15 +40,15 @@ def upnet(name, output, num_pool_layers, down_sample_layers, ch, drop_prob, trai
     return output
 
 
-def blend(out,outs,drop_prob,training):
+def blend(ci,out,outs,drop_prob,training):
     blends = []
     _, w, h, f = out.shape
     for i,r in enumerate(outs):
         logging.info('Blen {}: {}'.format(i,r.shape))
         l = tf.concat([out,r],3)
-        blends.append(conv_block(l,f,drop_prob,f'r{i}_combine',False,training))
+        blends.append(conv_block(l,f,drop_prob,f'c{ci}_r{i}_combine',False,training))
     l = tf.concat(blends, 3)
-    return conv_block(l,f,drop_prob,f'r{i}_combine',False,training)
+    return conv_block(l,f,drop_prob,f'c{ci}_r{i}_select_combine',False,training)
 
 
 def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], training=True):
@@ -84,9 +84,9 @@ def unet(inputs, out_chans, chans, drop_prob, num_pool_layers,refines=[], traini
         logging.info('R{} Down_{} - {}'.format(rindex,i + 2, final_down.shape))
         r_final_downs.append(r_final_down)
 
-    final_down = blend(final_down,r_final_downs,drop_prob,training)
+    final_down = blend(0,final_down,r_final_downs,drop_prob,training)
     for rindex in range(len(down_sample_layers)):
-        down_sample_layers[rindex] = blend(down_sample_layers[rindex],r_down_sample_layers[rindex],drop_prob,training)
+        down_sample_layers[rindex] = blend(rindex+1,down_sample_layers[rindex],r_down_sample_layers[rindex],drop_prob,training)
 
     logging.info('Final Down_{} - {}'.format(i + 2, final_down.shape))
 
