@@ -25,6 +25,10 @@ def init_hook(**params):
         if back is not None:
             global glob_background
             glob_background = backgrounds.get(back, None)
+        else:
+            global glob_background
+            glob_background = backgrounds.get('Hell1', None)
+
     LOG.info('Loaded.')
 
 def process(inputs, ctx, **kwargs):
