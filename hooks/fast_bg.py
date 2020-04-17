@@ -15,6 +15,7 @@ glob_background = None
 def init_hook(**params):
     backgrounds_dir = params.get('backgrounds', None)
     global backgrounds
+    global glob_background
     if backgrounds_dir is not None:
         for f in glob.glob(backgrounds_dir + '/*.jpg'):
             name = os.path.basename(f)[:-4]
@@ -23,10 +24,8 @@ def init_hook(**params):
             backgrounds[name] = img[:, :, ::-1]
         back = params.get('background', None)
         if back is not None:
-            global glob_background
             glob_background = backgrounds.get(back, None)
-        else:
-            global glob_background
+        if glob_background is None:
             glob_background = backgrounds.get('Hell1', None)
 
     LOG.info('Loaded.')
