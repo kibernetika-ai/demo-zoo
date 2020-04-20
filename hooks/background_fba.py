@@ -184,7 +184,10 @@ def process(inputs, ct_x, **kwargs):
     mask[np.less_equal(mask, pixel_threshold)] = 0
     mask[np.greater(mask, pixel_threshold)] = 255
     mask = fba.pred(ct_x.global_ctx['fba'], image / 255, mask)
-
+    mask = cv2.resize(mask, (box[3] - box[1], box[2] - box[0]))
+    mask = np.pad(mask,
+                  ((box[0], process_height - box[2]), (box[1], process_width - box[3])),
+                  'constant')
     mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]), interpolation=cv2.INTER_CUBIC)
     # mask = cv2.GaussianBlur(mask, (21, 21), 11)
     if effect == 'Remove background':
