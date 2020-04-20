@@ -31,6 +31,8 @@ def init_hook(**params):
             glob_background = backgrounds.get(back, None)
 
     LOG.info('Loaded.')
+    gpu = int(os.environ.get('GPU_COUNT', 0)) > 0
+    return {'fba': fba.fba.load_model(gpu, params.get('fba_model'))}
 
 
 obj_classes = {
@@ -183,8 +185,8 @@ def process(inputs, ct_x, **kwargs):
     mask[np.greater(mask, pixel_threshold)] = 255
     mask = fba.pred(ct_x.global_ctx['fba'], image / 255, pre_mask)
 
-    mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]),interpolation=cv2.INTER_CUBIC)
-    #mask = cv2.GaussianBlur(mask, (21, 21), 11)
+    mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]), interpolation=cv2.INTER_CUBIC)
+    # mask = cv2.GaussianBlur(mask, (21, 21), 11)
     if effect == 'Remove background':
         background = None
         if 'background_img' in inputs:
@@ -228,7 +230,7 @@ def process(inputs, ct_x, **kwargs):
         foreground = mask * image
         radius = min(max(blur_radius, 2), 10)
         if effect == 'Grey':
-            background = cv2.cvtColor(original_image,cv2.COLOR_RGB2GRAY)
+            background = cv2.cvtColor(original_image, cv2.COLOR_RGB2GRAY)
         else:
             background = cv2.GaussianBlur(original_image, (radius, radius), 10)
         background = (1.0 - mask) * background.astype(np.float32)
@@ -236,5 +238,3 @@ def process(inputs, ct_x, **kwargs):
         image = image.astype(np.uint8)
 
     return _return(image)
-
-
