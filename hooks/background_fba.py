@@ -32,7 +32,7 @@ def init_hook(**params):
 
     LOG.info('Loaded.')
     gpu = int(os.environ.get('GPU_COUNT', 0)) > 0
-    return {'fba': fba.fba.load_model(gpu, params.get('fba_model'))}
+    return {'fba': fba.load_model(gpu, params.get('fba_model'))}
 
 
 obj_classes = {
