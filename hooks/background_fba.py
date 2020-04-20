@@ -119,6 +119,7 @@ def process(inputs, ct_x, **kwargs):
 
     blur_radius = limit(blur_radius, 1, 10, 2)
 
+    image = cv2.resize(image,(320,320))
     outputs = ct_x.drivers[0].predict({'inputs': np.expand_dims(image, axis=0)})
     num_detection = int(outputs['num_detections'][0])
     if num_detection < 1:
@@ -178,7 +179,7 @@ def process(inputs, ct_x, **kwargs):
     if len(mask.shape) > 2:
         logging.warning('Mask shape is {}'.format(mask.shape))
         mask = mask[:, :, 0]
-    image = image[box[0]:box[2], box[1]:box[3], :]
+    #image = image[box[0]:box[2], box[1]:box[3], :]
     image = image.astype(np.float32)
     mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
     mask[np.less_equal(mask, pixel_threshold)] = 0
