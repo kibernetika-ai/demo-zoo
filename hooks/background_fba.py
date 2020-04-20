@@ -183,7 +183,7 @@ def process(inputs, ct_x, **kwargs):
     mask = cv2.resize(mask, (320, 320))
     mask[np.less_equal(mask, pixel_threshold)] = 0
     mask[np.greater(mask, pixel_threshold)] = 255
-    mask = fba.pred(ct_x.global_ctx['fba'], image / 255, pre_mask)
+    mask = fba.pred(ct_x.global_ctx['fba'], image / 255, mask)
 
     mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]), interpolation=cv2.INTER_CUBIC)
     # mask = cv2.GaussianBlur(mask, (21, 21), 11)
