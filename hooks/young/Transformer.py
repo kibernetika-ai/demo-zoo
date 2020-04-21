@@ -274,7 +274,7 @@ class Pipe:
         if not is_video:
             image_bytes = cv2.imencode('.jpg', image)[1].tostring()
         else:
-            image_bytes = image
+            image_bytes = image[:,:,::-1]
             h = 480
             w = int(480 * image.shape[1] / image.shape[0])
             result['status'] = cv2.resize(image, (w, h))
