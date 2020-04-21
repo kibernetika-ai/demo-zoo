@@ -183,8 +183,8 @@ def process(inputs, ct_x, **kwargs):
     #image = image[box[0]:box[2], box[1]:box[3], :]
     image = image.astype(np.float32)
     #mask = cv2.resize(mask, (image.shape[1], image.shape[0]))
-    #mask[np.less_equal(mask, pixel_threshold)] = 0
-    #mask[np.greater(mask, pixel_threshold)] = 255
+    mask[np.less_equal(mask, pixel_threshold)] = 0
+    mask[np.greater(mask, pixel_threshold)] = 255
     #mask = fba.pred(ct_x.global_ctx['fba'], image / 255, mask)
     mask = mask.astype(np.float32)/255
     #mask = cv2.resize(mask, (box[3] - box[1], box[2] - box[0]))
