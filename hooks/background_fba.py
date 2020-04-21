@@ -120,6 +120,7 @@ def process(inputs, ct_x, **kwargs):
     blur_radius = limit(blur_radius, 1, 10, 2)
 
     image = cv2.resize(image,(320,320))
+    original_image = image
     outputs = ct_x.drivers[0].predict({'inputs': np.expand_dims(image, axis=0)})
     num_detection = int(outputs['num_detections'][0])
     if num_detection < 1:
