@@ -66,8 +66,8 @@ def process(inputs, ct_x, **kwargs):
         if not is_video:
             if result.shape[2] == 3:
                 result = result[:, :, ::-1]
-                result = cv2.imencode('.png', result)[1].tostring()
-                encoding = 'png'
+                result = cv2.imencode('.jpg', result)[1].tostring()
+                encoding = 'jpeg'
             else:
                 result = result
                 result = cv2.imencode('.png', result)[1].tostring()
@@ -121,7 +121,7 @@ def process(inputs, ct_x, **kwargs):
     blur_radius = limit(blur_radius, 1, 10, 2)
 
     image = cv2.resize(image,(320,320))
-    original_image = image
+    #original_image = image
     outputs = ct_x.drivers[0].predict({'inputs': np.expand_dims(image, axis=0)})
     num_detection = int(outputs['num_detections'][0])
     if num_detection < 1:
@@ -194,7 +194,7 @@ def process(inputs, ct_x, **kwargs):
     #mask = np.pad(mask,
     #              ((box[0], process_height - box[2]), (box[1], process_width - box[3])),
     #              'constant')
-    #mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]))
+    mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]))
     # mask = cv2.GaussianBlur(mask, (21, 21), 11)
     if effect == 'Remove background':
         background = None
@@ -223,7 +223,7 @@ def process(inputs, ct_x, **kwargs):
             image = background + image
             image = image.astype(np.uint8)
         else:
-            if not is_video and masks is None:
+            if not is_video:
                 mask = (mask * 255).astype(np.uint8)
                 image = image[:, :, ::-1].astype(np.uint8)
                 image = np.concatenate([image, mask], axis=2)
