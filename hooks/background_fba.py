@@ -239,11 +239,15 @@ def process(inputs, ct_x, **kwargs):
         foreground = mask * image
         radius = min(max(blur_radius, 2), 10)
         if effect == 'Grey':
-            background = cv2.cvtColor(original_image.astype(np.uint8), cv2.COLOR_RGB2GRAY)
+            background = rgb2gray(original_image)
         else:
-            background = cv2.GaussianBlur(original_image.astype(np.uint8), (radius, radius), 10)
+            background = cv2.GaussianBlur(original_image, (radius, radius), 10)
         background = (1.0 - mask) * background.astype(np.float32)
         image = foreground + background
         image = image.astype(np.uint8)
 
     return _return(image)
+
+def rgb2gray(rgb):
+    gray = np.dot(rgb[..., :3], [0.299, 0.587, 0.114])
+    return np.stack([gray, gray, gray], axis=2)
