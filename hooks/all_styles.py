@@ -150,8 +150,8 @@ def process(inputs, ctx, **kwargs):
             model = p[0]
             style_name = '_'.join(p[1:])
         img = ctx.global_ctx[model].process(img, style_name, inputs)
-    img = img[:, :, ::-1]
     if not is_video:
+        img = img[:, :, ::-1]
         img = cv2.imencode('.jpg', img)[1].tostring()
     return {'output': img}
 
