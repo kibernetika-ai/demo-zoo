@@ -219,7 +219,7 @@ def process(inputs, ct_x, **kwargs):
             image = background + image
             image = image.astype(np.uint8)
         else:
-            if not is_video:
+            if not is_video and masks is None:
                 mask = (mask * 255).astype(np.uint8)
                 image = image[:, :, ::-1].astype(np.uint8)
                 image = np.concatenate([image, mask], axis=2)
