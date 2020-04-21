@@ -66,8 +66,8 @@ def process(inputs, ct_x, **kwargs):
         if not is_video:
             if result.shape[2] == 3:
                 result = result[:, :, ::-1]
-                result = cv2.imencode('.jpg', result)[1].tostring()
-                encoding = 'jpeg'
+                result = cv2.imencode('.png', result)[1].tostring()
+                encoding = 'png'
             else:
                 result = result
                 result = cv2.imencode('.png', result)[1].tostring()
