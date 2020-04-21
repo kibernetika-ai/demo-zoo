@@ -191,7 +191,7 @@ def process(inputs, ct_x, **kwargs):
     #mask = np.pad(mask,
     #              ((box[0], process_height - box[2]), (box[1], process_width - box[3])),
     #              'constant')
-    mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]))
+    #mask = cv2.resize(mask, (original_image.shape[1], original_image.shape[0]))
     # mask = cv2.GaussianBlur(mask, (21, 21), 11)
     if effect == 'Remove background':
         background = None
