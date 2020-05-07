@@ -13,8 +13,8 @@ def init_hook(**kwargs):
 def process(inputs, ctx, **kwargs):
     original_image, is_video = load_image(inputs, 'inputs')
     if is_video:
-        return {'output': original_image}
+        return {'outputs': original_image}
     else:
         _, buf = cv2.imencode('.png', original_image[:, :, ::-1])
         image = np.array(buf).tostring()
-        return {'output': image}
+        return {'outputs': image}
